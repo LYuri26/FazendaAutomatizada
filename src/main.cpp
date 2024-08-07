@@ -75,13 +75,6 @@ void loop()
 {
     unsigned long currentMillis = millis();
 
-    // Verifica se o tempo para atualizar o tempo foi alcançado
-    if (currentMillis - lastUpdate >= UPDATE_INTERVAL)
-    {
-        updateTime();               // Atualiza o tempo
-        lastUpdate = currentMillis; // Atualiza o tempo da última atualização
-    }
-
     // Verifica se o dispositivo está em modo AP e se não está, executa a reconexão WiFi
     if (!isAPMode)
     { // Verifica se o dispositivo não está em modo AP

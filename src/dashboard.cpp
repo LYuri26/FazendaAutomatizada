@@ -113,100 +113,80 @@ void setupDashboardPage(AsyncWebServer &server)
     <!-- Inclusão de jQuery e Bootstrap JavaScript -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var toggleButton = document.getElementById('toggleButton'); // Botão para ligar/desligar o compressor
-            var messageBox = document.getElementById('messageBox');     // Caixa de mensagens
-            var previousMaintenanceState = null;                        // Variável para armazenar o estado anterior de manutenção
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var toggleButton = document.getElementById('toggleButton'); // Botão para ligar/desligar o compressor
+        var messageBox = document.getElementById('messageBox');     // Caixa de mensagens
 
-            // Função para atualizar o estado do botão
-            function updateButtonState() {
-                fetch('/compressor-state') // Faz uma requisição para obter o estado do compressor
-                    .then(response => response.json())
-                    .then(data => {
-                        var compressorLigado = data.compressorLigado; // Estado do compressor (ligado/desligado)
-                        var sistemaEmManutencao = data.sistemaEmManutencao; // Estado de manutenção do sistema
-                        var horaAtual = new Date().getHours() + (new Date().getMinutes() / 60); // Hora atual em formato decimal
+        // Função para atualizar o estado do botão
+        function updateButtonState() {
+            fetch('/compressor-state') // Faz uma requisição para obter o estado do compressor
+                .then(response => response.json())
+                .then(data => {
+                    var compressorLigado = data.compressorLigado; // Estado do compressor (ligado/desligado)
+                    var horaAtual = new Date().getHours() + (new Date().getMinutes() / 60); // Hora atual em formato decimal
 
-                        if (sistemaEmManutencao) {
-                            toggleButton.innerHTML = 'Compressor em manutenção'; // Texto do botão
-                            toggleButton.classList.add('btn-disabled'); // Adiciona classe de botão desabilitado
-                            toggleButton.classList.remove('btn-ligar', 'btn-desligar'); // Remove outras classes de botão
-                            messageBox.innerHTML = ''; // Limpa mensagens anteriores
-                        } else {
-                            if (compressorLigado) {
-                                toggleButton.innerHTML = 'Desligar'; // Texto do botão
-                                toggleButton.classList.add('btn-desligar'); // Adiciona classe de botão para desligar
-                                toggleButton.classList.remove('btn-ligar'); // Remove classe de botão para ligar
-                                messageBox.innerHTML = 'O compressor acabou de ser ligado, aguarde o tempo limite para desligar novamente.'; // Mensagem
-                            } else {
-                                toggleButton.innerHTML = 'Ligar'; // Texto do botão
-                                toggleButton.classList.add('btn-ligar'); // Adiciona classe de botão para ligar
-                                toggleButton.classList.remove('btn-desligar'); // Remove classe de botão para desligar
-                                messageBox.innerHTML = ''; // Limpa mensagens anteriores
-                            }
-
-                            // Mensagens baseadas no horário atual
-                            if (horaAtual < 7.5 || horaAtual >= 22.5) { // Verifica se está fora do horário de funcionamento
-                                messageBox.innerHTML = 'Compressor desligado devido ao horário de funcionamento.';
-                            } else if (horaAtual >= 7.5 && horaAtual < 8) { // Verifica se está entre 7:30 e 8:00
-                                messageBox.innerHTML = 'Compressor Ligado após o horário de funcionamento, desligue após o uso.';
-                            }
-                        }
-
-                        // Recarregar a página se o estado de manutenção mudar de true para false
-                        if (previousMaintenanceState !== null && previousMaintenanceState !== sistemaEmManutencao && !sistemaEmManutencao) {
-                            location.reload(); // Recarrega a página
-                        }
-
-                        // Atualizar o estado anterior de manutenção
-                        previousMaintenanceState = sistemaEmManutencao;
-                    })
-                    .catch(error => console.error('Erro ao obter estado inicial do compressor:', error)); // Exibe erro no console se houver
-            }
-                // Adiciona um evento de clique no botão para alternar o estado do compressor
-                toggleButton.addEventListener('click', function(event) {
-                    event.preventDefault(); // Previne o comportamento padrão do link
-
-                    // Verifica se o botão está desabilitado e retorna se estiver
-                    if (toggleButton.classList.contains('btn-disabled')) {
-                        return; // Não faz nada se o botão estiver desativado
+                    if (compressorLigado) {
+                        toggleButton.innerHTML = 'Desligar'; // Texto do botão
+                        toggleButton.classList.add('btn-desligar'); // Adiciona classe de botão para desligar
+                        toggleButton.classList.remove('btn-ligar'); // Remove classe de botão para ligar
+                        messageBox.innerHTML = 'O compressor acabou de ser ligado, aguarde o tempo limite para desligar novamente.'; // Mensagem
+                    } else {
+                        toggleButton.innerHTML = 'Ligar'; // Texto do botão
+                        toggleButton.classList.add('btn-ligar'); // Adiciona classe de botão para ligar
+                        toggleButton.classList.remove('btn-desligar'); // Remove classe de botão para desligar
+                        messageBox.innerHTML = ''; // Limpa mensagens anteriores
                     }
 
-                    // Determina a ação com base no texto atual do botão
-                    var action = toggleButton.innerHTML === 'Desligar' ? 'desligar' : 'ligar';
+                    // Mensagens baseadas no horário atual
+                    if (horaAtual < 7.5 || horaAtual >= 22.5) { // Verifica se está fora do horário de funcionamento
+                        messageBox.innerHTML = 'Compressor desligado devido ao horário de funcionamento.';
+                    } else if (horaAtual >= 7.5 && horaAtual < 8) { // Verifica se está entre 7:30 e 8:00
+                        messageBox.innerHTML = 'Compressor Ligado após o horário de funcionamento, desligue após o uso.';
+                    }
+                })
+                .catch(error => console.error('Erro ao obter estado inicial do compressor:', error)); // Exibe erro no console se houver
+        }
 
-                    // Faz uma requisição para alternar o estado do compressor
-                    fetch('/toggle?action=' + action)
-                        .then(response => response.text()) // Obtém a resposta como texto
-                        .then(data => {
-                            console.log('Resposta do servidor:', data); // Exibe a resposta do servidor no console
-                            updateButtonState(); // Atualiza o estado do botão após a ação
-                        })
-                        .catch(error => console.error('Erro ao enviar requisição:', error)); // Exibe erro no console se houver
-                });
+        // Adiciona um evento de clique no botão para alternar o estado do compressor
+        toggleButton.addEventListener('click', function(event) {
+            event.preventDefault(); // Previne o comportamento padrão do link
 
-                // Atualiza o estado do botão a cada 5 segundos
-                setInterval(updateButtonState, 5000);
+            // Determina a ação com base no texto atual do botão
+            var action = toggleButton.innerHTML === 'Desligar' ? 'desligar' : 'ligar';
 
-                // Atualiza o estado do botão imediatamente ao carregar a página
-                updateButtonState();
-            });
-        </script>
+            // Faz uma requisição para alternar o estado do compressor
+            fetch('/toggle?action=' + action)
+                .then(response => response.text()) // Obtém a resposta como texto
+                .then(data => {
+                    console.log('Resposta do servidor:', data); // Exibe a resposta do servidor no console
+                    updateButtonState(); // Atualiza o estado do botão após a ação
+                })
+                .catch(error => console.error('Erro ao enviar requisição:', error)); // Exibe erro no console se houver
+        });
+
+        // Atualiza o estado do botão a cada 5 segundos
+        setInterval(updateButtonState, 5000);
+
+        // Atualiza o estado do botão imediatamente ao carregar a página
+        updateButtonState();
+    });
+</script>
+
     </body>
 </html>
         )rawliteral";
 
-        // Envia a resposta HTML ao cliente
-        request->send(200, "text/html", html); // Envia o conteúdo HTML como resposta ao cliente
-    });
+                  // Envia a resposta HTML ao cliente
+                  request->send(200, "text/html", html); // Envia o conteúdo HTML como resposta ao cliente
+              });
 
     // Configura o endpoint para retornar o estado do compressor em formato JSON
-    server.on("/compressor-state", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-        // Cria um JSON com o estado atual do compressor e do sistema de manutenção
-        String stateJson = "{\"compressorLigado\":" + String(compressorLigado) + ",\"sistemaEmManutencao\":" + String(sistemaEmManutencao) + "}";
-        // Envia o JSON como resposta
-        request->send(200, "application/json", stateJson); // Envia o JSON como resposta ao cliente
+    server.on("/compressor-state", HTTP_GET, [](AsyncWebServerRequest *request){
+        // Criar o objeto JSON com base na variável compressorLigado
+        String stateJson = "{\"compressorLigado\":" + String(compressorLigado) + "}";
+
+        // Enviar resposta JSON
+        request->send(200, "application/json", stateJson);
     });
 }

@@ -6,7 +6,6 @@
 #include <ESPAsyncWebServer.h> // Biblioteca para servidor web assíncrono
 #include "autenticador.h"      // Cabeçalho onde a variável userLoggedIn é declarada
 #include "ligadesliga.h"       // Cabeçalho para manipulação do compressor
-#include "tempo.h"             // Cabeçalho para manipulação de tempo
 
 // -------------------------------------------------------------------------
 // Configurações e Variáveis Globais
@@ -123,41 +122,21 @@ void setupLigaDesliga(AsyncWebServer &server)
 
     server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-        unsigned long currentMillis = millis(); // Obtém o tempo atual
-        Serial.println("Requisição recebida para alternar o estado do compressor.");
+                  unsigned long currentMillis = millis(); // Obtém o tempo atual
+                  Serial.println("Requisição recebida para alternar o estado do compressor.");
 
-        // Verifica se o compressor foi alterado recentemente e evita comandos repetidos
-        if (compressorLigado && (currentMillis - lastToggleTime < 30000)) {
-            Serial.println("Comando ignorado. O compressor foi alterado recentemente. Aguarde 30 segundos entre as tentativas.");
-            request->send(200, "text/plain", "Comando ignorado. Aguarde 30 segundos entre as tentativas.");
-            return;
-        }
+                  compressorLigado = !compressorLigado;                         // Alterna o estado do compressor
+                  digitalWrite(pinoLigaDesliga, compressorLigado ? HIGH : LOW); // Atualiza o pino do compressor
 
-        lastToggleTime = currentMillis; // Atualiza o tempo da última alteração
-        compressorLigado = !compressorLigado; // Alterna o estado do compressor
-        digitalWrite(pinoLigaDesliga, compressorLigado ? HIGH : LOW); // Atualiza o pino do compressor
+                  // Mensagem de resposta com base no estado do compressor
+                  String message = compressorLigado ? "Compressor ligado!" : "Compressor desligado!";
 
-        // Mensagem de resposta com base no estado do compressor
-        String message = compressorLigado ? "Compressor ligado!" : "Compressor desligado!";
-        if (compressorLigado && (isAfterClosingTime() || isBeforeOpeningTime())) {
-            message += " Alerta! Já se passou das 22:30 e ainda não chegou às 07:30, atente-se para desligar o compressor após o uso.";
-            Serial.println("Alerta: Compressor ligado fora do horário permitido.");
-        }
+                  Serial.print("Estado do compressor: ");
+                  Serial.println(message);
+                  request->send(200, "text/plain", message); // Envia a resposta ao cliente
 
-        Serial.print("Estado do compressor: ");
-        Serial.println(message);
-        request->send(200, "text/plain", message); // Envia a resposta ao cliente
-
-        saveCompressorState(compressorLigado); // Salva o estado do compressor no arquivo
-
-        // Inicializa o timer se o compressor estiver ligado
-        if (compressorLigado) {
-            previousMillis = millis();
-            timerAtivo = true;
-            Serial.println("Compressor ligado. Timer ativado.");
-        } else {
-            Serial.println("Compressor desligado. Timer desativado.");
-        } });
+                  saveCompressorState(compressorLigado); // Salva o estado do compressor no arquivo
+              });
 
     Serial.print("Estado inicial do compressor: ");
     Serial.println(compressorLigado ? "Ligado" : "Desligado");
