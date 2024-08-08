@@ -1,9 +1,6 @@
-// -------------------------------------------------------------------------
-// Inclusão de Bibliotecas
-// -------------------------------------------------------------------------
-#include <WiFi.h>              // Inclui a biblioteca para funcionalidades WiFi
-#include <ESPAsyncWebServer.h> // Inclui a biblioteca para criar um servidor web assíncrono
-#include <SPIFFS.h>            // Inclui a biblioteca para o sistema de arquivos SPIFFS
+#include <ESP8266WiFi.h>          // Inclui a biblioteca para funcionalidades WiFi no ESP8266
+#include <ESPAsyncWebServer.h>    // Inclui a biblioteca para criar um servidor web assíncrono
+#include <LittleFS.h>             // Inclui a biblioteca para o sistema de arquivos LittleFS
 
 // -------------------------------------------------------------------------
 // Cabeçalhos Personalizados
@@ -16,6 +13,7 @@
 #include "wificonexao.h"     // Cabeçalho para a configuração WiFi
 #include "paginaserro.h"     // Cabeçalho para as páginas de erro
 #include "wifigerenciador.h" // Cabeçalho para o gerenciamento do WiFi
+
 // -------------------------------------------------------------------------
 // Configuração do Servidor Web
 // -------------------------------------------------------------------------
@@ -24,7 +22,7 @@ AsyncWebServer server(80); // Criação do objeto do servidor web na porta 80 (H
 // -------------------------------------------------------------------------
 // Declarações de Funções
 // -------------------------------------------------------------------------
-void setupSPIFFS();                                          // Função para inicializar o sistema de arquivos SPIFFS
+void setupLittleFS();                                          // Função para inicializar o sistema de arquivos LittleFS
 void setupServer();                                          // Função para configurar o servidor e suas rotas
 void configureRoutes();                                      // Função para configurar as rotas do servidor
 bool isAuthenticated(AsyncWebServerRequest *request);        // Função para verificar se a requisição está autenticada
@@ -56,13 +54,13 @@ void setup()
     Serial.begin(115200);
     Serial.println("Iniciando o setup..."); // Mensagem indicando o início do setup
 
-    // Configura o ESP32 para o modo Station (cliente) e aguarda um pouco
+    // Configura o ESP8266 para o modo Station (cliente) e aguarda um pouco
     WiFi.mode(WIFI_STA); // Define o modo WiFi como Station
     delay(1000);         // Aguarda 1 segundo
 
-    // Inicializa o sistema de arquivos SPIFFS e tenta conectar às redes salvas
-    setupSPIFFS();           // Chama a função para inicializar o SPIFFS
-    loadSavedWiFiNetworks(); // Função para carregar redes WiFi salvas (não definida no código fornecido)
+    // Inicializa o sistema de arquivos LittleFS e tenta conectar às redes salvas
+    setupLittleFS();           // Chama a função para inicializar o LittleFS
+    loadSavedWiFiNetworks();  // Função para carregar redes WiFi salvas (não definida no código fornecido)
 
     // Configura o servidor web e inicializa o cliente NTP
     setupServer(); // Chama a função para configurar o servidor e suas rotas
@@ -107,16 +105,16 @@ void loop()
 // Funções Auxiliares
 // -------------------------------------------------------------------------
 /**
- * Inicializa o sistema de arquivos SPIFFS.
+ * Inicializa o sistema de arquivos LittleFS.
  */
-void setupSPIFFS()
+void setupLittleFS()
 {
-    if (!SPIFFS.begin(true)) // Tenta iniciar o SPIFFS
+    if (!LittleFS.begin()) // Tenta iniciar o LittleFS
     {
-        Serial.println("Falha ao iniciar o sistema de arquivos SPIFFS"); // Mensagem de erro se o SPIFFS não iniciar
-        return;                                                          // Retorna da função se a inicialização falhar
+        Serial.println("Falha ao iniciar o sistema de arquivos LittleFS"); // Mensagem de erro se o LittleFS não iniciar
+        return;                                                           // Retorna da função se a inicialização falhar
     }
-    Serial.println("SPIFFS inicializado com sucesso."); // Mensagem de sucesso se o SPIFFS iniciar corretamente
+    Serial.println("LittleFS inicializado com sucesso."); // Mensagem de sucesso se o LittleFS iniciar corretamente
 }
 
 /**
@@ -152,24 +150,24 @@ void configureRoutes()
 {
     // Rota de login
     server.on("/login", HTTP_POST, [](AsyncWebServerRequest *request)
-              { handleLogin(request); }); // Função para lidar com a requisição de login
+    { handleLogin(request); }); // Função para lidar com a requisição de login
 
     // Rota de logout
     server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request)
-              { handleLogout(request); }); // Função para lidar com a requisição de logout
+    { handleLogout(request); }); // Função para lidar com a requisição de logout
 
     // Rota protegida: Dashboard
     server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
+    {
         if (isAuthenticated(request)) { // Verifica se a requisição está autenticada
-            request->send(SPIFFS, "/dashboard", "text/html"); // Envia a página do dashboard
+            request->send(LittleFS, "/dashboard", "text/html"); // Envia a página do dashboard
         } else {
             redirectToAccessDenied(request); // Redireciona para a página de acesso negado
         } });
 
     // Rota protegida: Toggle
     server.on("/toggle", HTTP_ANY, [](AsyncWebServerRequest *request)
-              {
+    {
         if (isAuthenticated(request)) { // Verifica se a requisição está autenticada
             handleToggleAction(server); // Função para lidar com a ação de toggle
         } else {
@@ -178,7 +176,7 @@ void configureRoutes()
 
     // Rota para verificar autenticação
     server.on("/check-auth", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
+    {
         if (isAuthenticated(request)) { // Verifica se a requisição está autenticada
             request->send(200, "application/json", "{\"authenticated\":true}"); // Responde com JSON indicando autenticação bem-sucedida
         } else {

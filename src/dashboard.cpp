@@ -1,6 +1,5 @@
 #include <ESPAsyncWebServer.h> // Biblioteca para servidor web assíncrono
-#include <FS.h>                // Biblioteca para sistema de arquivos
-#include <SPIFFS.h>            // Biblioteca para sistema de arquivos SPIFFS
+#include <LittleFS.h>          // Biblioteca para sistema de arquivos LittleFS
 #include "dashboard.h"         // Inclui o cabeçalho para a configuração do dashboard
 #include "ligadesliga.h"       // Inclui o cabeçalho para a configuração do compressor
 #include "autenticador.h"      // Inclui o cabeçalho onde a variável userLoggedIn é declarada

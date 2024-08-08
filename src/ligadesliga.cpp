@@ -2,7 +2,7 @@
 // Inclusões de Bibliotecas e Cabeçalhos
 // -------------------------------------------------------------------------
 #include <FS.h>                // Biblioteca para manipulação do sistema de arquivos
-#include <SPIFFS.h>            // Biblioteca para o sistema de arquivos SPIFFS
+#include <LittleFS.h>          // Biblioteca para o sistema de arquivos LittleFS
 #include <ESPAsyncWebServer.h> // Biblioteca para servidor web assíncrono
 #include "autenticador.h"      // Cabeçalho onde a variável userLoggedIn é declarada
 #include "ligadesliga.h"       // Cabeçalho para manipulação do compressor
@@ -48,27 +48,27 @@ void handleToggleAction(AsyncWebServer &server)
 }
 
 /**
- * Função para inicializar o sistema de arquivos SPIFFS.
+ * Função para inicializar o sistema de arquivos LittleFS.
  */
-void initSPIFFS()
+void initLittleFS()
 {
-    if (!SPIFFS.begin(true))
+    if (!LittleFS.begin())
     {
-        Serial.println("Erro ao iniciar SPIFFS. O sistema de arquivos não pôde ser montado.");
+        Serial.println("Erro ao iniciar LittleFS. O sistema de arquivos não pôde ser montado.");
         return;
     }
-    Serial.println("SPIFFS inicializado com sucesso.");
+    Serial.println("LittleFS inicializado com sucesso.");
 }
 
 /**
- * Função para ler o estado do compressor a partir do arquivo SPIFFS.
+ * Função para ler o estado do compressor a partir do arquivo LittleFS.
  *
  * @return Estado do compressor (ligado ou desligado).
  */
 bool readCompressorState()
 {
     Serial.println("Tentando ler o estado do compressor do arquivo.");
-    File file = SPIFFS.open(arquivoEstado, "r");
+    File file = LittleFS.open(arquivoEstado, "r");
     if (!file)
     {
         Serial.println("Arquivo de estado não encontrado, assumindo estado desligado.");
@@ -83,14 +83,14 @@ bool readCompressorState()
 }
 
 /**
- * Função para salvar o estado do compressor no arquivo SPIFFS.
+ * Função para salvar o estado do compressor no arquivo LittleFS.
  *
  * @param state Estado atual do compressor (ligado ou desligado).
  */
 void saveCompressorState(bool state)
 {
     Serial.printf("Salvando o estado do compressor: %s\n", state ? "Ligado" : "Desligado");
-    File file = SPIFFS.open(arquivoEstado, "w");
+    File file = LittleFS.open(arquivoEstado, "w");
     if (!file)
     {
         Serial.println("Erro ao abrir o arquivo para escrita.");
@@ -114,7 +114,7 @@ void saveCompressorState(bool state)
 void setupLigaDesliga(AsyncWebServer &server)
 {
     Serial.println("Configurando o servidor Web para controle do compressor.");
-    initSPIFFS(); // Inicializa o sistema de arquivos SPIFFS
+    initLittleFS(); // Inicializa o sistema de arquivos LittleFS
 
     pinMode(pinoLigaDesliga, OUTPUT);                             // Configura o pino do compressor como saída
     compressorLigado = readCompressorState();                     // Lê o estado do compressor do arquivo

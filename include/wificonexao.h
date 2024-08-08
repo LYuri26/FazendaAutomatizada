@@ -1,7 +1,7 @@
 #ifndef WIFICONEXAO_H
 #define WIFICONEXAO_H
 
-#include <WiFi.h>               // Inclui a biblioteca para conexão WiFi
+#include <ESP8266WiFi.h>        // Inclui a biblioteca para conexão WiFi no ESP8266
 #include <ESPAsyncWebServer.h> // Inclui a biblioteca para o servidor web assíncrono
 
 // -------------------------------------------------------------------------

@@ -1,17 +1,17 @@
-#include <WiFi.h>                   // Inclui a biblioteca WiFi para conectar-se a redes Wi-Fi
-#include <ESPAsyncWebServer.h>      // Inclui a biblioteca para o servidor web assíncrono
-#include <SPIFFS.h>                 // Inclui a biblioteca para o sistema de arquivos SPIFFS
-#include "wificonexao.h"            // Inclui o arquivo de cabeçalho com funções de conexão Wi-Fi
+#include <ESP8266WiFi.h>              // Inclui a biblioteca ESP8266WiFi para conectar-se a redes Wi-Fi
+#include <ESPAsyncWebServer.h>        // Inclui a biblioteca para o servidor web assíncrono
+#include <LittleFS.h>                 // Inclui a biblioteca para o sistema de arquivos LittleFS
+#include "wificonexao.h"              // Inclui o arquivo de cabeçalho com funções de conexão Wi-Fi
 #include "wifiinterface.h"
 
 // Função para configurar a página de gerenciamento de Wi-Fi
 void setupWiFiManagementPage(AsyncWebServer &server) {
     // -------------------------------------------------------------------------
-    // Inicializa o sistema de arquivos SPIFFS
+    // Inicializa o sistema de arquivos LittleFS
     // -------------------------------------------------------------------------
-    if (!SPIFFS.begin(true)) {
-        Serial.println("Falha ao iniciar o sistema de arquivos SPIFFS");
-        return; // Interrompe a função se SPIFFS não iniciar
+    if (!LittleFS.begin()) {
+        Serial.println("Falha ao iniciar o sistema de arquivos LittleFS");
+        return; // Interrompe a função se LittleFS não iniciar
     }
 
     // -------------------------------------------------------------------------
@@ -27,7 +27,7 @@ void setupWiFiManagementPage(AsyncWebServer &server) {
     // -------------------------------------------------------------------------
     server.on("/listadewifi", HTTP_GET, [](AsyncWebServerRequest *request) {
         // Abre o arquivo de redes Wi-Fi para leitura
-        File file = SPIFFS.open("/wifiredes.txt", FILE_READ);
+        File file = LittleFS.open("/wifiredes.txt", "r");
         if (!file) {
             request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi"); // Responde com erro se não conseguir abrir o arquivo
             return;
@@ -52,7 +52,7 @@ void setupWiFiManagementPage(AsyncWebServer &server) {
             password = request->getParam("password", true)->value();
 
             // Abre o arquivo de redes Wi-Fi para leitura
-            File file = SPIFFS.open("/wifiredes.txt", FILE_READ);
+            File file = LittleFS.open("/wifiredes.txt", "r");
             if (!file) {
                 request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi"); // Responde com erro se não conseguir abrir o arquivo
                 return;
@@ -90,7 +90,7 @@ void setupWiFiManagementPage(AsyncWebServer &server) {
             }
 
             // Abre o arquivo de redes Wi-Fi para escrita
-            file = SPIFFS.open("/wifiredes.txt", FILE_WRITE);
+            file = LittleFS.open("/wifiredes.txt", "w");
             if (!file) {
                 request->send(500, "text/plain", "Erro ao abrir o arquivo para escrita"); // Responde com erro se não conseguir abrir o arquivo
                 return;
@@ -116,7 +116,7 @@ void setupWiFiManagementPage(AsyncWebServer &server) {
             String ssidToDelete = request->getParam("ssid")->value();
 
             // Abre o arquivo de redes Wi-Fi para leitura
-            File file = SPIFFS.open("/wifiredes.txt", FILE_READ);
+            File file = LittleFS.open("/wifiredes.txt", "r");
             if (!file) {
                 request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi"); // Responde com erro se não conseguir abrir o arquivo
                 return;
@@ -143,7 +143,7 @@ void setupWiFiManagementPage(AsyncWebServer &server) {
             }
 
             // Abre o arquivo de redes Wi-Fi para escrita
-            file = SPIFFS.open("/wifiredes.txt", FILE_WRITE);
+            file = LittleFS.open("/wifiredes.txt", "w");
             if (!file) {
                 request->send(500, "text/plain", "Erro ao abrir o arquivo para escrita"); // Responde com erro se não conseguir abrir o arquivo
                 return;
