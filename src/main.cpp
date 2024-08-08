@@ -58,6 +58,18 @@ void setupLittleFS() {
 }
 
 void setupServer() {
+    setupIndexPage(server);
+    setupCreditosPage(server);
+    setupDashboardPage(server);
+    setupLigaDesliga(server);
+    setupAcessoInvalidoPage(server);
+    setupNotFoundPage(server);
+    setupUsuarioJaLogadoPage(server);
+    setupCredenciaisInvalidasPage(server);
+
+    // Remova a chamada para configureRoutes(), já que não está definida
+    // configureRoutes();
+
     server.on("/login", HTTP_POST, [](AsyncWebServerRequest *request) {
         handleLogin(request);
     });
