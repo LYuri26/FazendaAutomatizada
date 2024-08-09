@@ -36,6 +36,18 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server) {
 
             File file = LittleFS.open("/wifiredes.txt", "r");
             if (!file) {
+                file = LittleFS.open("/wifiredes.txt", "w"); // Cria o arquivo se não existir
+                if (!file) {
+                    request->send(500, "text/plain", "Erro ao criar o arquivo de redes Wi-Fi");
+                    return;
+                }
+                file.close();
+            } else {
+                file.close();
+            }
+
+            file = LittleFS.open("/wifiredes.txt", "r");
+            if (!file) {
                 request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
                 return;
             }
@@ -77,7 +89,12 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server) {
             file.print(newContent);
             file.close();
 
-            connectToWiFi(ssid.c_str(), password.c_str());
+            // Atualiza as variáveis globais ssid e password
+            strncpy(::ssid, ssid.c_str(), sizeof(::ssid) - 1);
+            strncpy(::password, password.c_str(), sizeof(::password) - 1);
+
+            // Chama a função de conexão sem parâmetros
+            connectToWiFi();
 
             request->redirect("/wifigerenciamento");
         } else {

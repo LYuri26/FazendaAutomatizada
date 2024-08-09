@@ -3,9 +3,6 @@
 
 #include <ESPAsyncWebServer.h>
 
-void setupAcessoInvalidoPage(AsyncWebServer& server);
-void setupNotFoundPage(AsyncWebServer& server);
-void setupUsuarioJaLogadoPage(AsyncWebServer& server);
-void setupCredenciaisInvalidasPage(AsyncWebServer& server);
+void setupErrorPages(AsyncWebServer& server);
 
 #endif // PAGINASERRO_H

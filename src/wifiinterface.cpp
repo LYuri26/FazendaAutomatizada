@@ -9,43 +9,39 @@ const char* getWiFiGerenciamentoPage() {
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
             background-color: #f8f9fa;
+            padding: 20px;
         }
         .container {
-            max-width: 400px;
+            max-width: 300px;
             margin: 0 auto;
-            background-color: #ffffff;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            background-color: #fff;
+            padding: 10px;
+            border: 1px solid #ccc;
         }
         h2 {
             text-align: center;
-            margin-bottom: 20px;
+            font-size: 18px;
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
         label {
             display: block;
+            font-size: 14px;
             margin-bottom: 5px;
         }
         input[type="text"], input[type="password"] {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
+            padding: 5px;
             border: 1px solid #ccc;
-            border-radius: 3px;
             box-sizing: border-box;
         }
         button {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 8px;
+            margin-top: 10px;
             border: none;
-            border-radius: 3px;
             cursor: pointer;
         }
         .btn-success {
@@ -60,18 +56,17 @@ const char* getWiFiGerenciamentoPage() {
             background-color: #dc3545;
             color: white;
             display: inline-block;
-            padding: 5px 10px;
             margin-top: 5px;
+            padding: 5px;
+            font-size: 12px;
             text-align: center;
             text-decoration: none;
-            font-size: 14px;
         }
         #saved-networks {
-            margin-top: 20px;
-            max-height: 150px;
-            overflow-y: auto;
-            border-top: 1px solid #ddd;
+            margin-top: 10px;
+            border-top: 1px solid #ccc;
             padding-top: 10px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -103,15 +98,15 @@ const char* getWiFiGerenciamentoPage() {
                     savedNetworks.innerHTML = '';
                     if (data.trim()) {
                         var networks = data.trim().split('\n');
-                        networks.forEach(network => {
+                        networks.forEach(function(network) {
                             var parts = network.split(',');
-                            savedNetworks.innerHTML += '<p><strong>SSID:</strong> ' + parts[0] + ' <a class="btn-danger" href="/excluirwifi?ssid=' + parts[0] + '">Delete</a></p>';
+                            savedNetworks.innerHTML += '<p>SSID: ' + parts[0] + ' <a class="btn-danger" href="/excluirwifi?ssid=' + parts[0] + '">Excluir</a></p>';
                         });
                     } else {
                         savedNetworks.innerHTML = '<p>Nenhuma rede salva encontrada.</p>';
                     }
                 })
-                .catch(error => {
+                .catch(function(error) {
                     document.getElementById('saved-networks').innerHTML = '<p>Erro ao buscar redes salvas.</p>';
                 });
         }
@@ -120,8 +115,13 @@ const char* getWiFiGerenciamentoPage() {
 
         document.getElementById('toggle-password').addEventListener('click', function() {
             var passwordField = document.getElementById('password');
-            passwordField.type = passwordField.type === 'password' ? 'text' : 'password';
-            this.textContent = this.textContent === 'Mostrar' ? 'Ocultar' : 'Mostrar';
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                this.textContent = 'Ocultar';
+            } else {
+                passwordField.type = 'password';
+                this.textContent = 'Mostrar';
+            }
         });
 
         document.getElementById('save-form').addEventListener('submit', function(event) {
@@ -131,12 +131,12 @@ const char* getWiFiGerenciamentoPage() {
                 body: new FormData(this)
             })
             .then(response => response.text())
-            .then(data => {
+            .then(function(data) {
                 document.getElementById('message').textContent = 'Rede conectada com sucesso!';
-                this.reset();
+                document.getElementById('save-form').reset();
                 fetchSavedNetworks();
             })
-            .catch(error => {
+            .catch(function(error) {
                 document.getElementById('message').textContent = 'Erro ao conectar na rede';
             });
         });

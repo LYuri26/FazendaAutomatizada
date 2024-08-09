@@ -29,7 +29,7 @@ void setupIndexPage(AsyncWebServer& server) {
                         border: 1px solid #ddd;
                         border-radius: 4px;
                         text-align: center;
-                        width: 100%;
+                        width: 93.5%;
                         max-width: 300px;
                     }
                     .login-title {
@@ -42,7 +42,7 @@ void setupIndexPage(AsyncWebServer& server) {
                         text-align: left;
                     }
                     .form-group input {
-                        width: 100%;
+                        width: 93.5%;
                         padding: 8px;
                         border: 1px solid #ccc;
                         border-radius: 4px;

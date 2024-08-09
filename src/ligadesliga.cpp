@@ -1,157 +1,163 @@
-// -------------------------------------------------------------------------
-// Inclusões de Bibliotecas e Cabeçalhos
-// -------------------------------------------------------------------------
-#include <FS.h>                // Biblioteca para manipulação do sistema de arquivos
-#include <LittleFS.h>          // Biblioteca para o sistema de arquivos LittleFS
-#include <ESPAsyncWebServer.h> // Biblioteca para servidor web assíncrono
-#include "autenticador.h"      // Cabeçalho onde a variável userLoggedIn é declarada
-#include "ligadesliga.h"       // Cabeçalho para manipulação do compressor
+#include <FS.h>
+#include <LittleFS.h>
+#include <ESPAsyncWebServer.h>
+#include "autenticador.h"
+#include "ligadesliga.h"
 
-// -------------------------------------------------------------------------
-// Configurações e Variáveis Globais
-// -------------------------------------------------------------------------
-const int pinoLigaDesliga = 2;                        // Pino do compressor
-const String arquivoEstado = "/estadocompressor.txt"; // Arquivo para salvar o estado do compressor
+const int pinoLuzCasa = 2;
+const int pinoLuzRua = 3;
+const int pinoLuzPasto = 4;
 
-bool compressorLigado = false; // Estado atual do compressor (ligado ou desligado)
+const String arquivoEstadoCasa = "/estadoLuzCasa.txt";
+const String arquivoEstadoRua = "/estadoLuzRua.txt";
+const String arquivoEstadoPasto = "/estadoLuzPasto.txt";
+const String arquivoEstadoGeral = "/estadoLuzGeral.txt";
 
-// -------------------------------------------------------------------------
-// Funções de Manipulação do Compressor
-// -------------------------------------------------------------------------
+bool luzCasaLigada = false;
+bool luzRuaLigada = false;
+bool luzPastoLigada = false;
+bool luzGeralLigada = false;
 
-/**
- * Função para manipular a ação de ligar/desligar o compressor.
- *
- * @param server Instância do servidor web assíncrono.
- */
-void handleToggleAction(AsyncWebServer &server)
-{
-    server.on("/toggle", HTTP_ANY, [](AsyncWebServerRequest *request)
-              {
-        // Verifica se o usuário está autenticado
+void handleToggleAction(AsyncWebServer &server) {
+    server.on("/toggle", HTTP_ANY, [](AsyncWebServerRequest *request) {
         if (!isAuthenticated(request)) {
-            redirectToAccessDenied(request); // Redireciona se não autenticado
+            redirectToAccessDenied(request);
             return;
         }
 
-        // Lógica para alternar o estado do compressor com base no parâmetro "action"
         String action = request->getParam("action")->value();
-        if (action == "ligar") {
-            compressorLigado = true; // Liga o compressor
-            request->send(200, "text/plain", "Compressor ligado!"); // Resposta ao cliente
-        } else if (action == "desligar") {
-            compressorLigado = false; // Desliga o compressor
-            request->send(200, "text/plain", "Compressor desligado!"); // Resposta ao cliente
+        String id = request->getParam("id")->value();
+
+        if (id == "toggleButton1") { // Luz da Casa
+            toggleLuzCasa(action, request);
+        } else if (id == "toggleButton2") { // Luz da Rua
+            toggleLuzRua(action, request);
+        } else if (id == "toggleButton3") { // Luz do Pasto
+            toggleLuzPasto(action, request);
+        } else if (id == "toggleButton4") { // Luz Geral
+            toggleLuzGeral(action, request);
         } else {
-            request->send(400, "text/plain", "Ação inválida!"); // Ação inválida
-        } });
+            request->send(400, "text/plain", "Botão inválido!");
+        }
+    });
 }
 
-/**
- * Função para inicializar o sistema de arquivos LittleFS.
- */
-void initLittleFS()
-{
-    if (!LittleFS.begin())
-    {
+
+void initLittleFS() {
+    if (!LittleFS.begin()) {
         Serial.println("Erro ao iniciar LittleFS. O sistema de arquivos não pôde ser montado.");
         return;
     }
     Serial.println("LittleFS inicializado com sucesso.");
 }
 
-/**
- * Função para ler o estado do compressor a partir do arquivo LittleFS.
- *
- * @return Estado do compressor (ligado ou desligado).
- */
-bool readCompressorState()
-{
-    Serial.println("Tentando ler o estado do compressor do arquivo.");
+bool readEstadoLuz(const String &arquivoEstado) {
     File file = LittleFS.open(arquivoEstado, "r");
-    if (!file)
-    {
+    if (!file) {
         Serial.println("Arquivo de estado não encontrado, assumindo estado desligado.");
-        return false; // Assumindo que o compressor está desligado se o arquivo não for encontrado
+        return false;
     }
 
-    String state = file.readStringUntil('\n'); // Lê o estado do arquivo
+    String state = file.readStringUntil('\n');
     file.close();
-    bool estado = state.toInt() == 1; // Converte o valor lido para booleano
-    Serial.printf("Estado lido do arquivo: %s\n", estado ? "Ligado" : "Desligado");
+    bool estado = state.toInt() == 1;
     return estado;
 }
 
-/**
- * Função para salvar o estado do compressor no arquivo LittleFS.
- *
- * @param state Estado atual do compressor (ligado ou desligado).
- */
-void saveCompressorState(bool state)
-{
-    Serial.printf("Salvando o estado do compressor: %s\n", state ? "Ligado" : "Desligado");
+void saveEstadoLuz(const String &arquivoEstado, bool state) {
     File file = LittleFS.open(arquivoEstado, "w");
-    if (!file)
-    {
+    if (!file) {
         Serial.println("Erro ao abrir o arquivo para escrita.");
         return;
     }
 
-    file.println(state ? "1" : "0"); // Salva o estado como "1" para ligado e "0" para desligado
+    file.println(state ? "1" : "0");
     file.close();
-    Serial.println("Estado do compressor salvo com sucesso.");
 }
 
-// -------------------------------------------------------------------------
-// Funções de Configuração do Servidor Web
-// -------------------------------------------------------------------------
+void setupLigaDesliga(AsyncWebServer &server) {
+    Serial.println("Configurando o servidor Web para controle das luzes.");
 
-/**
- * Função para configurar o servidor Web para controle do compressor.
- *
- * @param server Instância do servidor web assíncrono.
- */
-void setupLigaDesliga(AsyncWebServer &server)
-{
-    Serial.println("Configurando o servidor Web para controle do compressor.");
-    initLittleFS(); // Inicializa o sistema de arquivos LittleFS
+    initLittleFS();
 
-    pinMode(pinoLigaDesliga, OUTPUT);                             // Configura o pino do compressor como saída
-    compressorLigado = readCompressorState();                     // Lê o estado do compressor do arquivo
-    digitalWrite(pinoLigaDesliga, compressorLigado ? HIGH : LOW); // Define o estado inicial do compressor
+    pinMode(pinoLuzCasa, OUTPUT);
+    pinMode(pinoLuzRua, OUTPUT);
+    pinMode(pinoLuzPasto, OUTPUT);
 
-    server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-                  Serial.println("Requisição recebida para alternar o estado do compressor.");
+    luzCasaLigada = readEstadoLuz(arquivoEstadoCasa);
+    luzRuaLigada = readEstadoLuz(arquivoEstadoRua);
+    luzPastoLigada = readEstadoLuz(arquivoEstadoPasto);
+    luzGeralLigada = readEstadoLuz(arquivoEstadoGeral);
 
-                  compressorLigado = !compressorLigado;                         // Alterna o estado do compressor
-                  digitalWrite(pinoLigaDesliga, compressorLigado ? HIGH : LOW); // Atualiza o pino do compressor
+    digitalWrite(pinoLuzCasa, luzCasaLigada ? HIGH : LOW);
+    digitalWrite(pinoLuzRua, luzRuaLigada ? HIGH : LOW);
+    digitalWrite(pinoLuzPasto, luzPastoLigada ? HIGH : LOW);
 
-                  // Mensagem de resposta com base no estado do compressor
-                  String message = compressorLigado ? "Compressor ligado!" : "Compressor desligado!";
+    handleToggleAction(server);
 
-                  Serial.print("Estado do compressor: ");
-                  Serial.println(message);
-                  request->send(200, "text/plain", message); // Envia a resposta ao cliente
-
-                  saveCompressorState(compressorLigado); // Salva o estado do compressor no arquivo
-              });
-
-    Serial.print("Estado inicial do compressor: ");
-    Serial.println(compressorLigado ? "Ligado" : "Desligado");
+    Serial.println("Configuração concluída.");
 }
 
-// -------------------------------------------------------------------------
-// Funções de Atualização e Desligamento
-// -------------------------------------------------------------------------
+void toggleLuzCasa(String action, AsyncWebServerRequest *request) {
+    if (action == "ligar") {
+        luzCasaLigada = true;
+        digitalWrite(pinoLuzCasa, HIGH);
+        request->send(200, "text/plain", "Luz da Casa ligada!");
+    } else if (action == "desligar") {
+        luzCasaLigada = false;
+        digitalWrite(pinoLuzCasa, LOW);
+        request->send(200, "text/plain", "Luz da Casa desligada!");
+    } else {
+        request->send(400, "text/plain", "Ação inválida!");
+    }
+    saveEstadoLuz(arquivoEstadoCasa, luzCasaLigada);
+}
 
-/**
- * Função para desligar o dispositivo e salvar o estado do compressor.
- */
-void shutdown()
-{
-    saveCompressorState(compressorLigado); // Salva o estado do compressor
-    Serial.println("Dispositivo desligado. Estado do compressor salvo.");
-    delay(1000);   // Aguarda um segundo para garantir que a mensagem seja exibida
-    ESP.restart(); // Reinicia o ESP32
+void toggleLuzRua(String action, AsyncWebServerRequest *request) {
+    if (action == "ligar") {
+        luzRuaLigada = true;
+        digitalWrite(pinoLuzRua, HIGH);
+        request->send(200, "text/plain", "Luz da Rua ligada!");
+    } else if (action == "desligar") {
+        luzRuaLigada = false;
+        digitalWrite(pinoLuzRua, LOW);
+        request->send(200, "text/plain", "Luz da Rua desligada!");
+    } else {
+        request->send(400, "text/plain", "Ação inválida!");
+    }
+    saveEstadoLuz(arquivoEstadoRua, luzRuaLigada);
+}
+
+void toggleLuzPasto(String action, AsyncWebServerRequest *request) {
+    if (action == "ligar") {
+        luzPastoLigada = true;
+        digitalWrite(pinoLuzPasto, HIGH);
+        request->send(200, "text/plain", "Luz do Pasto ligada!");
+    } else if (action == "desligar") {
+        luzPastoLigada = false;
+        digitalWrite(pinoLuzPasto, LOW);
+        request->send(200, "text/plain", "Luz do Pasto desligada!");
+    } else {
+        request->send(400, "text/plain", "Ação inválida!");
+    }
+    saveEstadoLuz(arquivoEstadoPasto, luzPastoLigada);
+}
+
+void toggleLuzGeral(String action, AsyncWebServerRequest *request) {
+    if (action == "ligar") {
+        luzGeralLigada = true;
+        digitalWrite(pinoLuzCasa, HIGH);
+        digitalWrite(pinoLuzRua, HIGH);
+        digitalWrite(pinoLuzPasto, HIGH);
+        request->send(200, "text/plain", "Luz Geral ligada! Todas as luzes foram ligadas.");
+    } else if (action == "desligar") {
+        luzGeralLigada = false;
+        digitalWrite(pinoLuzCasa, LOW);
+        digitalWrite(pinoLuzRua, LOW);
+        digitalWrite(pinoLuzPasto, LOW);
+        request->send(200, "text/plain", "Luz Geral desligada! Todas as luzes foram desligadas.");
+    } else {
+        request->send(400, "text/plain", "Ação inválida!");
+    }
+    saveEstadoLuz(arquivoEstadoGeral, luzGeralLigada);
 }

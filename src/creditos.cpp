@@ -70,14 +70,14 @@ void setupCreditosPage(AsyncWebServer& server) {
                 <h2 class="credits-title">Créditos</h2>
                 <div class="credits-content">
                     <h3>Alunos</h3>
-                    <a href="#" class="btn-link" target="_blank">Ali</a>
-                    <a href="#" class="btn-link" target="_blank">Felipe</a>
-                    <a href="#" class="btn-link" target="_blank">Paulo</a>
-                    <a href="#" class="btn-link" target="_blank">Pietro</a>
-                    <a href="#" class="btn-link" target="_blank">Yago</a>
+                    <a href="#" class="btn-link" target="_blank">Kaua de Jesus</a>
+                    <a href="#" class="btn-link" target="_blank">Kayque</a>
+                    <a href="#" class="btn-link" target="_blank">Hendryw</a>
+                    <a href="#" class="btn-link" target="_blank">Paulo Antonio</a>
+                    <a href="#" class="btn-link" target="_blank">Rian</a>
                     <h3>Instrutores</h3>
                     <a href="https://github.com/LYuri26" class="btn-link" target="_blank">Lenon Yuri</a>
-                    <a href="https://github.com/RoCkHeLuCk" class="btn-link" target="_blank">Franco M. A. Caixeta</a>
+                    <a href="#" class="btn-link" target="_blank">Miguel</a>
                 </div>
                 <button onclick="window.location.href='/'" class="btn-link-voltar">Voltar</button>
             </div>

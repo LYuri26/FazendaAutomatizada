@@ -13,38 +13,43 @@ String generateErrorPage(const String& title, const String& message, const Strin
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #f4f4f4;
         }
         .container {
             text-align: center;
             background-color: #fff;
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
         }
         h1 {
             color: #e74c3c;
+            font-size: 24px;
+            margin-bottom: 15px;
         }
         p {
             color: #555;
+            font-size: 16px;
+            margin-bottom: 20px;
         }
         a {
             text-decoration: none;
             color: #3498db;
             font-weight: bold;
             padding: 10px 20px;
-            border: 2px solid #3498db;
+            border: 1px solid #3498db;
             border-radius: 5px;
             display: inline-block;
+            font-size: 16px;
         }
         a:hover {
-            text-decoration: underline;
-            background-color: #f0f0f0;
+            background-color: #3498db;
+            color: #fff;
         }
     </style>
 </head>
@@ -59,7 +64,7 @@ String generateErrorPage(const String& title, const String& message, const Strin
 )rawliteral";
 }
 
-void setupUsuarioJaLogadoPage(AsyncWebServer& server)
+void setupErrorPages(AsyncWebServer& server)
 {
     server.on("/usuario-ja-logado", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(403, "text/html", generateErrorPage(
@@ -69,10 +74,7 @@ void setupUsuarioJaLogadoPage(AsyncWebServer& server)
             "/"
         ));
     });
-}
 
-void setupCredenciaisInvalidasPage(AsyncWebServer& server)
-{
     server.on("/credenciais-invalidas", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(401, "text/html", generateErrorPage(
             "Credenciais Inválidas",
@@ -81,10 +83,7 @@ void setupCredenciaisInvalidasPage(AsyncWebServer& server)
             "/"
         ));
     });
-}
 
-void setupAcessoInvalidoPage(AsyncWebServer& server)
-{
     server.on("/acesso-invalido", HTTP_GET, [](AsyncWebServerRequest *request){
         request->send(403, "text/html", generateErrorPage(
             "Acesso Inválido",
@@ -93,10 +92,7 @@ void setupAcessoInvalidoPage(AsyncWebServer& server)
             "/"
         ));
     });
-}
 
-void setupNotFoundPage(AsyncWebServer& server)
-{
     server.onNotFound([](AsyncWebServerRequest *request){
         request->send(404, "text/html", generateErrorPage(
             "Página Não Encontrada",

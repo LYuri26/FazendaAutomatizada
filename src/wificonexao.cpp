@@ -1,35 +1,38 @@
-#include <ESP8266WiFi.h> // Biblioteca para gerenciar a conexão Wi-Fi no ESP8266
-#include <LittleFS.h>    // Biblioteca para gerenciar o sistema de arquivos LittleFS
-#include <vector>        // Biblioteca para usar vetores
-#include "wificonexao.h" // Certifique-se de incluir o cabeçalho onde a função é declarada
+#include "wificonexao.h"
+#include <LittleFS.h>
 
-// -------------------------------------------------------------------------
-// Configurações Globais
-// -------------------------------------------------------------------------
-const char *ssid = "";
-const char *password = "";
 const char *ap_ssid = "CompressorWeb";
 const char *ap_password = "12345678";
 
-// Configurações do Access Point
 IPAddress local_ip(192, 168, 26, 7);
 IPAddress gateway(192, 168, 26, 1);
 IPAddress subnet(255, 255, 255, 0);
 
-bool isAPMode = false;
+char ssid[32] = "";
+char password[32] = "";
 
-void connectToWiFi(const char *ssid, const char *password) {
-    if (!ssid || !password || strlen(ssid) == 0 || strlen(password) == 0) {
-        Serial.println("SSID ou senha inválidos.");
+bool isAPMode = false;
+unsigned long lastMessageTime = 0;
+
+void connectToWiFi() {
+    unsigned long currentMillis = millis();
+
+    if (strlen(ssid) == 0 || strlen(password) == 0) {
+        if (currentMillis - lastMessageTime >= 300000) { // 300000 ms = 5 minutes
+            Serial.println("SSID ou senha inválidos.");
+            lastMessageTime = currentMillis; // Atualiza o timestamp
+        }
         enterAPMode();
         return;
     }
 
     WiFi.begin(ssid, password);
 
-    for (int attempts = 0; attempts < 5 && WiFi.status() != WL_CONNECTED; attempts++) {
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
         delay(1000);
         Serial.print(".");
+        attempts++;
     }
 
     if (WiFi.status() == WL_CONNECTED) {
@@ -64,21 +67,21 @@ void loadSavedWiFiNetworks() {
     File file = LittleFS.open("/wifiredes.txt", "r");
     if (!file) {
         Serial.println("Erro ao abrir o arquivo de redes Wi-Fi");
+        enterAPMode();
         return;
     }
 
-    char line[64];
     while (file.available()) {
-        file.readBytesUntil('\n', line, sizeof(line) - 1);
-        line[file.position()] = '\0'; // Garante que a string esteja terminada em NULL
+        char line[64];
+        file.readStringUntil('\n').toCharArray(line, sizeof(line)); // Lê a linha e converte para char[]
 
         char *commaPos = strchr(line, ',');
         if (commaPos) {
-            *commaPos = '\0'; // Termina o SSID
-            const char *savedSsid = line;
-            const char *savedPassword = commaPos + 1;
+            *commaPos = '\0';
+            strncpy(ssid, line, sizeof(ssid) - 1);                // Copia o SSID para a variável global
+            strncpy(password, commaPos + 1, sizeof(password) - 1); // Copia a senha para a variável global
 
-            connectToWiFi(savedSsid, savedPassword);
+            connectToWiFi();
             if (WiFi.status() == WL_CONNECTED) {
                 file.close();
                 return;

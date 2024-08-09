@@ -2,13 +2,13 @@
 #define WIFICONEXAO_H
 
 #include <ESP8266WiFi.h>
-#include <ESPAsyncWebServer.h>
 
-extern const char *ssid;
-extern const char *password;
+extern char ssid[32];        // Buffer para armazenar o SSID
+extern char password[32];    // Buffer para armazenar a senha
 extern bool isAPMode;
+extern unsigned long lastMessageTime; // Declaração externa para acesso global
 
-void connectToWiFi(const char *ssid, const char *password);
+void connectToWiFi();
 void enterAPMode();
 void loadSavedWiFiNetworks();
 void checkScanResults();

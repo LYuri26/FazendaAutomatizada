@@ -27,7 +27,7 @@ int reconnectAttempts = 0;
 
 void setup() {
     Serial.begin(115200);
-
+    
     WiFi.mode(WIFI_STA);
     delay(1000);
 
@@ -42,7 +42,7 @@ void loop() {
         unsigned long currentMillis = millis();
         if (currentMillis - lastReconnectAttempt >= RECONNECT_INTERVAL) {
             lastReconnectAttempt = currentMillis;
-            connectToWiFi(ssid, password);
+            connectToWiFi();  // Chame sem parâmetros
             reconnectAttempts++;
             if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
                 enterAPMode();
@@ -54,7 +54,12 @@ void loop() {
 
 void setupLittleFS() {
     if (!LittleFS.begin()) {
-        Serial.println("Erro ao montar o sistema de arquivos");
+        Serial.println("Erro ao montar o sistema de arquivos LittleFS.");
+        while (true) {
+            delay(1000); // Espera em loop infinito para indicar erro.
+        }
+    } else {
+        Serial.println("Sistema de arquivos LittleFS montado com sucesso.");
     }
 }
 
@@ -63,10 +68,10 @@ void setupServer() {
     setupCreditosPage(server);
     setupDashboardPage(server);
     setupLigaDesliga(server);
-    setupAcessoInvalidoPage(server);
-    setupNotFoundPage(server);
-    setupUsuarioJaLogadoPage(server);
-    setupCredenciaisInvalidasPage(server);
+
+    // Configura páginas de erro
+    setupErrorPages(server);
+
     setupWiFiGerenciamentoPage(server);
 
     server.on("/login", HTTP_POST, [](AsyncWebServerRequest *request) {

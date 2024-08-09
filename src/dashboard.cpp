@@ -16,6 +16,7 @@ void setupDashboardPage(AsyncWebServer &server)
 
         String html = R"rawliteral(
 <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
@@ -65,16 +66,7 @@ void setupDashboardPage(AsyncWebServer &server)
         .btn-luz-pasto { background-color: #ffc107; color: #fff; }
         .btn-luz-geral { background-color: #6c757d; color: #fff; }
         .btn-desligar { background-color: #dc3545; color: #fff; }
-        .footer {
-            width: 100%;
-            background-color: #007bff;
-            color: #fff;
-            text-align: center;
-            padding: 10px 0;
-            position: fixed;
-            bottom: 0;
-            font-size: 12px;
-        }
+        .btn-danger { background-color: #dc3545; color: #fff; } /* Cor personalizada para o botão de logout */
     </style>
 </head>
 <body>
@@ -87,10 +79,6 @@ void setupDashboardPage(AsyncWebServer &server)
         <a href="/logout" class="btn btn-danger">Logout</a>
     </div>
     <div id="messageBox"></div>
-    <div class="footer">
-        <p>Aplicação desenvolvida pela Turma de Informática Para Internet Trilhas de Futuro 2024</p>
-        <p>Instrutor: Lenon Yuri</p>
-    </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var buttons = document.querySelectorAll('.btn');
@@ -119,17 +107,27 @@ void setupDashboardPage(AsyncWebServer &server)
                     button.classList.remove('btn-luz-casa', 'btn-luz-rua', 'btn-luz-pasto', 'btn-luz-geral');
                     button.classList.add('btn-desligar');
                 } else {
-                    button.innerHTML = 'Ligar';
+                    resetButton(button);
+                }
+            }
+
+            function resetButton(button) {
+                if (button.id === 'toggleButton1') {
+                    button.innerHTML = 'Luz da Casa';
                     button.classList.remove('btn-desligar');
-                    if (button.id === 'toggleButton1') {
-                        button.classList.add('btn-luz-casa');
-                    } else if (button.id === 'toggleButton2') {
-                        button.classList.add('btn-luz-rua');
-                    } else if (button.id === 'toggleButton3') {
-                        button.classList.add('btn-luz-pasto');
-                    } else if (button.id === 'toggleButton4') {
-                        button.classList.add('btn-luz-geral');
-                    }
+                    button.classList.add('btn-luz-casa');
+                } else if (button.id === 'toggleButton2') {
+                    button.innerHTML = 'Luz da Rua';
+                    button.classList.remove('btn-desligar');
+                    button.classList.add('btn-luz-rua');
+                } else if (button.id === 'toggleButton3') {
+                    button.innerHTML = 'Luz do Pasto';
+                    button.classList.remove('btn-desligar');
+                    button.classList.add('btn-luz-pasto');
+                } else if (button.id === 'toggleButton4') {
+                    button.innerHTML = 'Luz Geral';
+                    button.classList.remove('btn-desligar');
+                    button.classList.add('btn-luz-geral');
                 }
             }
         });
@@ -140,8 +138,11 @@ void setupDashboardPage(AsyncWebServer &server)
 
         request->send(200, "text/html", html); });
 
-    server.on("/compressor-state", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-        String stateJson = "{\"compressorLigado\":" + String(compressorLigado) + "}";
+        String stateJson = "{\"luzCasaLigada\":" + String(luzCasaLigada) +
+                           ", \"luzRuaLigada\":" + String(luzRuaLigada) +
+                           ", \"luzPastoLigada\":" + String(luzPastoLigada) +
+                           ", \"luzGeralLigada\":" + String(luzGeralLigada) + "}";
         request->send(200, "application/json", stateJson); });
 }
