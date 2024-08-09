@@ -1,191 +1,147 @@
-#include <ESPAsyncWebServer.h> // Biblioteca para servidor web assíncrono
-#include <LittleFS.h>          // Biblioteca para sistema de arquivos LittleFS
-#include "dashboard.h"         // Inclui o cabeçalho para a configuração do dashboard
-#include "ligadesliga.h"       // Inclui o cabeçalho para a configuração do compressor
-#include "autenticador.h"      // Inclui o cabeçalho onde a variável userLoggedIn é declarada
+#include <ESPAsyncWebServer.h>
+#include <LittleFS.h>
+#include "dashboard.h"
+#include "ligadesliga.h"
+#include "autenticador.h"
 
-// -------------------------------------------------------------------------
-// Função para configurar a página do dashboard
-// -------------------------------------------------------------------------
-
-/**
- * Configura a rota para a página do dashboard no servidor Web.
- *
- * @param server A instância do servidor web assíncrono.
- */
 void setupDashboardPage(AsyncWebServer &server)
 {
-    // Configura o endpoint para a página do dashboard
     server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-                  // Verifica se o usuário está autenticado
-                  if (!isAuthenticated(request))
-                  {
-                      redirectToAccessDenied(request); // Redireciona para a página de acesso negado se não estiver autenticado
-                      return;
-                  }
+        if (!isAuthenticated(request))
+        {
+            redirectToAccessDenied(request);
+            return;
+        }
 
-                  // Define o conteúdo HTML da página do dashboard
-                  String html = R"rawliteral(
+        String html = R"rawliteral(
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
-    <!-- Inclui o Bootstrap para estilização -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        /* Estilo da página */
         body {
-            font-family: Arial, sans-serif; /* Define a fonte padrão da página */
-            background-color: #f8f9fa; /* Cor de fundo da página */
-            height: 100%; /* Altura da página igual ao tamanho do conteúdo */
-            margin: 0; /* Remove margens padrão */
-            display: flex; /* Usa flexbox para centralizar o conteúdo */
-            justify-content: center; /* Alinha horizontalmente no centro */
-            align-items: center; /* Alinha verticalmente no centro */
-            flex-direction: column; /* Alinha os itens em coluna */
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
         }
-
         .dashboard-container {
-            background-color: #ffffff; /* Cor de fundo do container do dashboard */
-            padding: 20px; /* Espaçamento interno do container */
-            border-radius: 5px; /* Bordas arredondadas */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Sombra ao redor do container */
-            width: 100%; /* Largura total do container */
-            max-width: 600px; /* Largura máxima do container */
-            text-align: center; /* Alinha o texto ao centro */
-            margin-top: 20px; /* Espaçamento acima do container */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
         }
-
         .dashboard-title {
-            font-size: 28px; /* Tamanho da fonte do título */
-            margin-bottom: 20px; /* Espaçamento abaixo do título */
-            color: #007bff; /* Cor do título */
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #007bff;
         }
-
-        .btn-ligar {
-            background-color: #28a745; /* Cor de fundo do botão de ligar */
-            color: white; /* Cor do texto do botão */
+        .btn {
+            display: inline-block;
+            padding: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            width: 100%;
+            max-width: 180px;
+            cursor: pointer;
+            border: none;
         }
-
-        .btn-desligar {
-            background-color: #dc3545; /* Cor de fundo do botão de desligar */
-            color: white; /* Cor do texto do botão */
-        }
-
-        .btn-disabled {
-            background-color: #ffa500; /* Cor de fundo do botão em manutenção */
-            color: white; /* Cor do texto do botão */
-        }
-
+        .btn-luz-casa { background-color: #28a745; color: #fff; }
+        .btn-luz-rua { background-color: #007bff; color: #fff; }
+        .btn-luz-pasto { background-color: #ffc107; color: #fff; }
+        .btn-luz-geral { background-color: #6c757d; color: #fff; }
+        .btn-desligar { background-color: #dc3545; color: #fff; }
         .footer {
-            width: 100%; /* Largura total do rodapé */
-            background-color: #007bff; /* Cor de fundo do rodapé */
-            color: white; /* Cor do texto do rodapé */
-            text-align: center; /* Alinha o texto ao centro */
-            padding: 10px 0; /* Espaçamento interno do rodapé */
-            position: fixed; /* Fixa o rodapé na parte inferior */
-            bottom: 0; /* Posiciona o rodapé na parte inferior */
-            font-size: 14px; /* Tamanho da fonte do rodapé */
+            width: 100%;
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+            position: fixed;
+            bottom: 0;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
-    <!-- Container principal do dashboard -->
     <div class="dashboard-container">
         <h2 class="dashboard-title">Bem-vindo ao Dashboard</h2>
-        <!-- Botão para ligar/desligar o compressor -->
-        <a href="#" class="btn btn-block mb-2" id="toggleButton">Carregando...</a>
-        <!-- Links para outras páginas -->
-        <a href="/umidade" class="btn btn-secondary btn-block mb-2">Umidade</a>
-        <a href="/pressao" class="btn btn-secondary btn-block mb-2">Pressão</a>
-        <a href="/logout" class="btn btn-danger btn-block mt-3">Logout</a>
+        <button class="btn btn-luz-casa" id="toggleButton1">Luz da Casa</button>
+        <button class="btn btn-luz-rua" id="toggleButton2">Luz da Rua</button>
+        <button class="btn btn-luz-pasto" id="toggleButton3">Luz do Pasto</button>
+        <button class="btn btn-luz-geral" id="toggleButton4">Luz Geral</button>
+        <a href="/logout" class="btn btn-danger">Logout</a>
     </div>
-    <div id="messageBox" class="mt-3"></div>
-    <!-- Rodapé da página -->
+    <div id="messageBox"></div>
     <div class="footer">
         <p>Aplicação desenvolvida pela Turma de Informática Para Internet Trilhas de Futuro 2024</p>
         <p>Instrutor: Lenon Yuri</p>
     </div>
-    <!-- Inclusão de jQuery e Bootstrap JavaScript -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var toggleButton = document.getElementById('toggleButton'); // Botão para ligar/desligar o compressor
-        var messageBox = document.getElementById('messageBox');     // Caixa de mensagens
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var buttons = document.querySelectorAll('.btn');
+            buttons.forEach(function(button) {
+                if (button.classList.contains('btn-danger')) {
+                    // Skip the logout button
+                    return;
+                }
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    var action = button.classList.contains('btn-desligar') ? 'desligar' : 'ligar';
+                    var buttonId = button.id;
+                    fetch('/toggle?action=' + action + '&id=' + buttonId)
+                        .then(response => response.text())
+                        .then(data => {
+                            console.log('Resposta do servidor:', data);
+                            updateButtonState(button, action === 'ligar');
+                        })
+                        .catch(error => console.error('Erro ao enviar requisição:', error));
+                });
+            });
 
-        // Função para atualizar o estado do botão
-        function updateButtonState() {
-            fetch('/compressor-state') // Faz uma requisição para obter o estado do compressor
-                .then(response => response.json())
-                .then(data => {
-                    var compressorLigado = data.compressorLigado; // Estado do compressor (ligado/desligado)
-                    var horaAtual = new Date().getHours() + (new Date().getMinutes() / 60); // Hora atual em formato decimal
-
-                    if (compressorLigado) {
-                        toggleButton.innerHTML = 'Desligar'; // Texto do botão
-                        toggleButton.classList.add('btn-desligar'); // Adiciona classe de botão para desligar
-                        toggleButton.classList.remove('btn-ligar'); // Remove classe de botão para ligar
-                        messageBox.innerHTML = 'O compressor acabou de ser ligado, aguarde o tempo limite para desligar novamente.'; // Mensagem
-                    } else {
-                        toggleButton.innerHTML = 'Ligar'; // Texto do botão
-                        toggleButton.classList.add('btn-ligar'); // Adiciona classe de botão para ligar
-                        toggleButton.classList.remove('btn-desligar'); // Remove classe de botão para desligar
-                        messageBox.innerHTML = ''; // Limpa mensagens anteriores
+            function updateButtonState(button, isOn) {
+                if (isOn) {
+                    button.innerHTML = 'Desligar';
+                    button.classList.remove('btn-luz-casa', 'btn-luz-rua', 'btn-luz-pasto', 'btn-luz-geral');
+                    button.classList.add('btn-desligar');
+                } else {
+                    button.innerHTML = 'Ligar';
+                    button.classList.remove('btn-desligar');
+                    if (button.id === 'toggleButton1') {
+                        button.classList.add('btn-luz-casa');
+                    } else if (button.id === 'toggleButton2') {
+                        button.classList.add('btn-luz-rua');
+                    } else if (button.id === 'toggleButton3') {
+                        button.classList.add('btn-luz-pasto');
+                    } else if (button.id === 'toggleButton4') {
+                        button.classList.add('btn-luz-geral');
                     }
-
-                    // Mensagens baseadas no horário atual
-                    if (horaAtual < 7.5 || horaAtual >= 22.5) { // Verifica se está fora do horário de funcionamento
-                        messageBox.innerHTML = 'Compressor desligado devido ao horário de funcionamento.';
-                    } else if (horaAtual >= 7.5 && horaAtual < 8) { // Verifica se está entre 7:30 e 8:00
-                        messageBox.innerHTML = 'Compressor Ligado após o horário de funcionamento, desligue após o uso.';
-                    }
-                })
-                .catch(error => console.error('Erro ao obter estado inicial do compressor:', error)); // Exibe erro no console se houver
-        }
-
-        // Adiciona um evento de clique no botão para alternar o estado do compressor
-        toggleButton.addEventListener('click', function(event) {
-            event.preventDefault(); // Previne o comportamento padrão do link
-
-            // Determina a ação com base no texto atual do botão
-            var action = toggleButton.innerHTML === 'Desligar' ? 'desligar' : 'ligar';
-
-            // Faz uma requisição para alternar o estado do compressor
-            fetch('/toggle?action=' + action)
-                .then(response => response.text()) // Obtém a resposta como texto
-                .then(data => {
-                    console.log('Resposta do servidor:', data); // Exibe a resposta do servidor no console
-                    updateButtonState(); // Atualiza o estado do botão após a ação
-                })
-                .catch(error => console.error('Erro ao enviar requisição:', error)); // Exibe erro no console se houver
+                }
+            }
         });
-
-        // Atualiza o estado do botão a cada 5 segundos
-        setInterval(updateButtonState, 5000);
-
-        // Atualiza o estado do botão imediatamente ao carregar a página
-        updateButtonState();
-    });
-</script>
-
-    </body>
+    </script>
+</body>
 </html>
         )rawliteral";
 
-                  // Envia a resposta HTML ao cliente
-                  request->send(200, "text/html", html); // Envia o conteúdo HTML como resposta ao cliente
-              });
+        request->send(200, "text/html", html); });
 
-    // Configura o endpoint para retornar o estado do compressor em formato JSON
-    server.on("/compressor-state", HTTP_GET, [](AsyncWebServerRequest *request){
-        // Criar o objeto JSON com base na variável compressorLigado
+    server.on("/compressor-state", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
         String stateJson = "{\"compressorLigado\":" + String(compressorLigado) + "}";
-
-        // Enviar resposta JSON
-        request->send(200, "application/json", stateJson);
-    });
+        request->send(200, "application/json", stateJson); });
 }

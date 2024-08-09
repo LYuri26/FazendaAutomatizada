@@ -122,7 +122,6 @@ void setupLigaDesliga(AsyncWebServer &server)
 
     server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-                  unsigned long currentMillis = millis(); // Obtém o tempo atual
                   Serial.println("Requisição recebida para alternar o estado do compressor.");
 
                   compressorLigado = !compressorLigado;                         // Alterna o estado do compressor

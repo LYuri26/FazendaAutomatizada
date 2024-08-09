@@ -10,6 +10,7 @@
 #include "wificonexao.h"
 #include "paginaserro.h"
 #include "wifigerenciador.h"
+#include "wifiinterface.h"
 
 AsyncWebServer server(80);
 
@@ -37,7 +38,7 @@ void setup() {
 }
 
 void loop() {
-    if (!isAPMode && WiFi.status() != WL_CONNECTED) {
+    if (WiFi.status() != WL_CONNECTED) {
         unsigned long currentMillis = millis();
         if (currentMillis - lastReconnectAttempt >= RECONNECT_INTERVAL) {
             lastReconnectAttempt = currentMillis;
@@ -66,9 +67,7 @@ void setupServer() {
     setupNotFoundPage(server);
     setupUsuarioJaLogadoPage(server);
     setupCredenciaisInvalidasPage(server);
-
-    // Remova a chamada para configureRoutes(), já que não está definida
-    // configureRoutes();
+    setupWiFiGerenciamentoPage(server);
 
     server.on("/login", HTTP_POST, [](AsyncWebServerRequest *request) {
         handleLogin(request);
@@ -80,7 +79,7 @@ void setupServer() {
 
     server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request) {
         if (isAuthenticated(request)) {
-            request->send(LittleFS, "/dashboard.html", "text/html");
+            request->send(LittleFS, "/dashboard", "text/html");
         } else {
             redirectToAccessDenied(request);
         }
@@ -110,5 +109,5 @@ void setupServer() {
 }
 
 void redirectToAccessDenied(AsyncWebServerRequest *request) {
-    request->redirect("/acesso-invalido.html");
+    request->redirect("/acesso-invalido");
 }

@@ -1,73 +1,53 @@
-#include <ESP8266WiFi.h>              // Inclui a biblioteca ESP8266WiFi para conectar-se a redes Wi-Fi
-#include <ESPAsyncWebServer.h>        // Inclui a biblioteca para o servidor web assíncrono
-#include <LittleFS.h>                 // Inclui a biblioteca para o sistema de arquivos LittleFS
-#include "wificonexao.h"              // Inclui o arquivo de cabeçalho com funções de conexão Wi-Fi
+#include <ESP8266WiFi.h>
+#include <ESPAsyncWebServer.h>
+#include <LittleFS.h>
+#include "wificonexao.h"
 #include "wifiinterface.h"
 
-// Função para configurar a página de gerenciamento de Wi-Fi
-void setupWiFiManagementPage(AsyncWebServer &server) {
-    // -------------------------------------------------------------------------
-    // Inicializa o sistema de arquivos LittleFS
-    // -------------------------------------------------------------------------
+void setupWiFiGerenciamentoPage(AsyncWebServer &server) {
     if (!LittleFS.begin()) {
         Serial.println("Falha ao iniciar o sistema de arquivos LittleFS");
-        return; // Interrompe a função se LittleFS não iniciar
+        return;
     }
 
-    // -------------------------------------------------------------------------
-    // Rota para a página de gerenciamento de Wi-Fi
-    // -------------------------------------------------------------------------
     server.on("/wifigerenciamento", HTTP_GET, [](AsyncWebServerRequest *request) {
-        // Envia a página de gerenciamento de Wi-Fi
-        request->send(200, "text/html", getWiFiManagementPage());
+        request->send(200, "text/html", getWiFiGerenciamentoPage());
     });
 
-    // -------------------------------------------------------------------------
-    // Rota para listar redes Wi-Fi salvas
-    // -------------------------------------------------------------------------
     server.on("/listadewifi", HTTP_GET, [](AsyncWebServerRequest *request) {
-        // Abre o arquivo de redes Wi-Fi para leitura
         File file = LittleFS.open("/wifiredes.txt", "r");
         if (!file) {
-            request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi"); // Responde com erro se não conseguir abrir o arquivo
+            request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
             return;
         }
 
-        // Lê o conteúdo do arquivo
         String networks = file.readString();
-        file.close(); // Fecha o arquivo após leitura
-        request->send(200, "text/plain", networks); // Envia o conteúdo lido como resposta
+        file.close();
+        request->send(200, "text/plain", networks);
     });
 
-    // -------------------------------------------------------------------------
-    // Rota para salvar uma nova rede Wi-Fi
-    // -------------------------------------------------------------------------
     server.on("/salvarwifi", HTTP_POST, [](AsyncWebServerRequest *request) {
         String ssid;
         String password;
 
         if (request->hasParam("ssid", true) && request->hasParam("password", true)) {
-            // Obtém o SSID e a senha do formulário
             ssid = request->getParam("ssid", true)->value();
             password = request->getParam("password", true)->value();
 
-            // Abre o arquivo de redes Wi-Fi para leitura
             File file = LittleFS.open("/wifiredes.txt", "r");
             if (!file) {
-                request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi"); // Responde com erro se não conseguir abrir o arquivo
+                request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
                 return;
             }
 
-            // Lê o conteúdo do arquivo
             String content = file.readString();
-            file.close(); // Fecha o arquivo após leitura
+            file.close();
 
             String newContent = "";
             bool ssidExists = false;
             if (content.length() > 0) {
-                // Processa o conteúdo existente para verificar se o SSID já está presente
-                int start = 0;
-                while (start < content.length()) {
+                unsigned int start = 0;
+                while (start < static_cast<unsigned int>(content.length())) {
                     int end = content.indexOf('\n', start);
                     if (end == -1) {
                         end = content.length();
@@ -76,59 +56,51 @@ void setupWiFiManagementPage(AsyncWebServer &server) {
                     int commaIndex = line.indexOf(',');
                     String savedSSID = line.substring(0, commaIndex);
                     if (savedSSID == ssid) {
-                        newContent += ssid + "," + password + "\n"; // Atualiza a entrada existente com a nova senha
+                        newContent += ssid + "," + password + "\n";
                         ssidExists = true;
                     } else {
-                        newContent += line + "\n"; // Mantém a entrada existente
+                        newContent += line + "\n";
                     }
                     start = end + 1;
                 }
             }
 
             if (!ssidExists) {
-                newContent += ssid + "," + password + "\n"; // Adiciona nova entrada se o SSID não existir
+                newContent += ssid + "," + password + "\n";
             }
 
-            // Abre o arquivo de redes Wi-Fi para escrita
             file = LittleFS.open("/wifiredes.txt", "w");
             if (!file) {
-                request->send(500, "text/plain", "Erro ao abrir o arquivo para escrita"); // Responde com erro se não conseguir abrir o arquivo
+                request->send(500, "text/plain", "Erro ao abrir o arquivo para escrita");
                 return;
             }
-            file.print(newContent); // Escreve o conteúdo atualizado no arquivo
-            file.close(); // Fecha o arquivo após escrita
+            file.print(newContent);
+            file.close();
 
-            // Tenta conectar à nova rede salva
             connectToWiFi(ssid.c_str(), password.c_str());
 
-            request->redirect("/wifigerenciamento"); // Redireciona para a página de gerenciamento de Wi-Fi
+            request->redirect("/wifigerenciamento");
         } else {
-            request->send(400, "text/plain", "Dados ausentes."); // Responde com erro se os dados estiverem ausentes
+            request->send(400, "text/plain", "Dados ausentes.");
         }
     });
 
-    // -------------------------------------------------------------------------
-    // Rota para deletar uma rede Wi-Fi salva
-    // -------------------------------------------------------------------------
     server.on("/excluirwifi", HTTP_GET, [](AsyncWebServerRequest *request) {
         if (request->hasParam("ssid")) {
-            // Obtém o SSID a ser excluído
             String ssidToDelete = request->getParam("ssid")->value();
 
-            // Abre o arquivo de redes Wi-Fi para leitura
             File file = LittleFS.open("/wifiredes.txt", "r");
             if (!file) {
-                request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi"); // Responde com erro se não conseguir abrir o arquivo
+                request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
                 return;
             }
 
-            // Lê o conteúdo do arquivo
             String content = file.readString();
-            file.close(); // Fecha o arquivo após leitura
+            file.close();
 
             String newContent = "";
-            int start = 0;
-            while (start < content.length()) {
+            unsigned int start = 0;
+            while (start < static_cast<unsigned int>(content.length())) {
                 int end = content.indexOf('\n', start);
                 if (end == -1) {
                     end = content.length();
@@ -137,23 +109,22 @@ void setupWiFiManagementPage(AsyncWebServer &server) {
                 int commaIndex = line.indexOf(',');
                 String savedSSID = line.substring(0, commaIndex);
                 if (savedSSID != ssidToDelete) {
-                    newContent += line + "\n"; // Mantém a entrada que não deve ser excluída
+                    newContent += line + "\n";
                 }
                 start = end + 1;
             }
 
-            // Abre o arquivo de redes Wi-Fi para escrita
             file = LittleFS.open("/wifiredes.txt", "w");
             if (!file) {
-                request->send(500, "text/plain", "Erro ao abrir o arquivo para escrita"); // Responde com erro se não conseguir abrir o arquivo
+                request->send(500, "text/plain", "Erro ao abrir o arquivo para escrita");
                 return;
             }
-            file.print(newContent); // Escreve o conteúdo atualizado no arquivo
-            file.close(); // Fecha o arquivo após escrita
+            file.print(newContent);
+            file.close();
 
-            request->redirect("/wifigerenciamento"); // Redireciona para a página de gerenciamento de Wi-Fi
+            request->redirect("/wifigerenciamento");
         } else {
-            request->send(400, "text/plain", "SSID ausente."); // Responde com erro se o SSID estiver ausente
+            request->send(400, "text/plain", "SSID ausente.");
         }
     });
 }
