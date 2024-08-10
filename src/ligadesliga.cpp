@@ -7,9 +7,9 @@
 // Declaração antecipada da função
 void toggleLuz(int index, String action, AsyncWebServerRequest *request);
 
-const int pinoLuzCasa = D2;
-const int pinoLuzRua = D3;
-const int pinoLuzPasto = D4;
+const int pinoLuzCasa = 10;
+const int pinoLuzRua = 11;
+const int pinoLuzPasto = 12;
 
 const String arquivoEstadoLuz[] = {"/estadoLuzCasa.txt", "/estadoLuzRua.txt", "/estadoLuzPasto.txt", "/estadoLuzGeral.txt"};
 bool luzEstado[] = {false, false, false, false}; // 0: Casa, 1: Rua, 2: Pasto, 3: Geral

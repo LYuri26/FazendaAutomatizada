@@ -19,8 +19,8 @@ bool isAPMode = false;
 bool connectionAttempted = false;
 
 void enterAPMode() {
-    Serial.println("Modo Access Point ativo...");
-    WiFi.mode(WIFI_AP_STA);
+    Serial.println("Entrando no modo Access Point...");
+    WiFi.mode(WIFI_AP_STA); // Configura o ESP8266 para o modo dual (AP + Station)
     WiFi.softAPConfig(local_ip, gateway, subnet);
     WiFi.softAP(ap_ssid, ap_password);
     Serial.print("IP AP: ");
@@ -45,7 +45,18 @@ bool connectToWiFi(const String& ssid, const String& password) {
         delay(500);
         attempts++;
     }
-    return WiFi.status() == WL_CONNECTED;
+    
+    // Verifica se a conexão foi bem-sucedida
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.print("Conectado à rede: ");
+        Serial.println(ssid);
+        Serial.print("IP Local: ");
+        Serial.println(WiFi.localIP());
+        return true;
+    } else {
+        Serial.println("Falha ao conectar à rede.");
+        return false;
+    }
 }
 
 bool connectToSavedNetworks() {
@@ -81,7 +92,7 @@ void loadSavedWiFiNetworks() {
     File file = LittleFS.open("/wifiredes.txt", "r");
     if (!file) {
         Serial.println("Erro ao abrir o arquivo /wifiredes.txt.");
-        enterAPMode();
+        enterAPMode(); // Entra no modo AP se não conseguir carregar as redes
         return;
     }
 
@@ -97,10 +108,8 @@ void loadSavedWiFiNetworks() {
             savedSSID.toCharArray(ssid, sizeof(ssid));          // SSID
             savedPassword.toCharArray(password, sizeof(password)); // Senha
 
-            Serial.print("Lendo rede salva: SSID=");
-            Serial.print(ssid);
-            Serial.print(", Senha=");
-            Serial.println(password);
+            Serial.print("Tentando conectar à rede salva: SSID=");
+            Serial.println(ssid);
 
             if (!connectionAttempted) {
                 connectionAttempted = true;
@@ -117,6 +126,8 @@ void loadSavedWiFiNetworks() {
 
     if (!connected) {
         Serial.println("Não foi possível conectar a nenhuma rede salva. Entrando no modo AP.");
-        enterAPMode();
     }
+    
+    // Mantém o AP ativo mesmo se a conexão WiFi for estabelecida
+    enterAPMode();
 }
