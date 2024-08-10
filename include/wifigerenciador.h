@@ -2,6 +2,8 @@
 #define WIFIGERENCIADOR_H
 
 #include <ESPAsyncWebServer.h>
+#include <LittleFS.h>
+
 
 void setupWiFiGerenciamentoPage(AsyncWebServer& server);
 void connectToWiFi(const char *ssid, const char *password);
