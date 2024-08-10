@@ -19,100 +19,93 @@ void setupServer();
 bool isAuthenticated(AsyncWebServerRequest *request);
 void redirectToAccessDenied(AsyncWebServerRequest *request);
 
-const unsigned long RECONNECT_INTERVAL = 1000;
-const int MAX_RECONNECT_ATTEMPTS = 10;
-
-unsigned long lastReconnectAttempt = 0;
-int reconnectAttempts = 0;
-
-void setup() {
+void setup()
+{
     Serial.begin(115200);
-    
-    WiFi.mode(WIFI_STA);
+    WiFi.mode(WIFI_AP_STA);
     delay(1000);
 
     setupLittleFS();
     loadSavedWiFiNetworks();
-
     setupServer();
 }
 
-void loop() {
-    if (WiFi.status() != WL_CONNECTED) {
-        unsigned long currentMillis = millis();
-        if (currentMillis - lastReconnectAttempt >= RECONNECT_INTERVAL) {
-            lastReconnectAttempt = currentMillis;
-            connectToWiFi();  // Chame sem parâmetros
-            reconnectAttempts++;
-            if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-                enterAPMode();
-                reconnectAttempts = 0;
+void loop()
+{
+    static unsigned long lastCheckTime = 0;
+    unsigned long currentTime = millis();
+
+    if (currentTime - lastCheckTime > 600000) // 10 minutos em milissegundos
+    {
+        lastCheckTime = currentTime;
+
+        if (isAPMode)
+        {
+            Serial.println("Modo Access Point ativo.");
+            Serial.println("Verificando solicitações no modo AP...");
+        }
+        else
+        {
+            if (WiFi.status() != WL_CONNECTED)
+            {
+                Serial.println("Desconectado da rede Wi-Fi.");
+                connectToWiFi();
+            }
+            else
+            {
+                Serial.print("Conectado à rede Wi-Fi: ");
+                Serial.println(WiFi.SSID());
+                Serial.print("IP Local: ");
+                Serial.println(WiFi.localIP());
             }
         }
     }
+
+    // Outras tarefas que precisam ser feitas frequentemente podem ser colocadas aqui
+
+    delay(1000); // Aguarda 1 segundo antes da próxima iteração do loop
 }
 
-void setupLittleFS() {
-    if (!LittleFS.begin()) {
+void setupLittleFS()
+{
+    if (!LittleFS.begin())
+    {
         Serial.println("Erro ao montar o sistema de arquivos LittleFS.");
-        while (true) {
-            delay(1000); // Espera em loop infinito para indicar erro.
-        }
-    } else {
-        Serial.println("Sistema de arquivos LittleFS montado com sucesso.");
+        while (true)
+        {
+            delay(1000);
+        } // Loop infinito em caso de erro
     }
+    Serial.println("Sistema de arquivos LittleFS montado com sucesso.");
 }
 
-void setupServer() {
+void setupServer()
+{
     setupIndexPage(server);
     setupCreditosPage(server);
     setupDashboardPage(server);
     setupLigaDesliga(server);
-
-    // Configura páginas de erro
     setupErrorPages(server);
-
     setupWiFiGerenciamentoPage(server);
 
-    server.on("/login", HTTP_POST, [](AsyncWebServerRequest *request) {
-        handleLogin(request);
-    });
+    server.on("/login", HTTP_POST, handleLogin);
+    server.on("/logout", HTTP_GET, handleLogout);
+    server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request)
+              { isAuthenticated(request) ? request->send(LittleFS, "/dashboard", "text/html") : redirectToAccessDenied(request); });
 
-    server.on("/logout", HTTP_GET, [](AsyncWebServerRequest *request) {
-        handleLogout(request);
-    });
+    server.on("/toggle", HTTP_ANY, [](AsyncWebServerRequest *request)
+              { isAuthenticated(request) ? handleToggleAction(server) : redirectToAccessDenied(request); });
 
-    server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request) {
-        if (isAuthenticated(request)) {
-            request->send(LittleFS, "/dashboard", "text/html");
-        } else {
-            redirectToAccessDenied(request);
-        }
-    });
+    server.on("/check-auth", HTTP_GET, [](AsyncWebServerRequest *request)
+              { request->send(200, "application/json", "{\"authenticated\":" + String(isAuthenticated(request) ? "true" : "false") + "}"); });
 
-    server.on("/toggle", HTTP_ANY, [](AsyncWebServerRequest *request) {
-        if (isAuthenticated(request)) {
-            handleToggleAction(server);
-        } else {
-            redirectToAccessDenied(request);
-        }
-    });
-
-    server.on("/check-auth", HTTP_GET, [](AsyncWebServerRequest *request) {
-        if (isAuthenticated(request)) {
-            request->send(200, "application/json", "{\"authenticated\":true}");
-        } else {
-            request->send(200, "application/json", "{\"authenticated\":false}");
-        }
-    });
-
-    server.onNotFound([](AsyncWebServerRequest *request) {
-        request->send(404, "text/plain", "Not found");
-    });
+    server.onNotFound([](AsyncWebServerRequest *request)
+                      { request->send(404, "text/plain", "Not found"); });
 
     server.begin();
 }
 
-void redirectToAccessDenied(AsyncWebServerRequest *request) {
+void redirectToAccessDenied(AsyncWebServerRequest *request)
+{
     request->redirect("/acesso-invalido");
 }

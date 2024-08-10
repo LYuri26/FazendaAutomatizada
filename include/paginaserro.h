@@ -4,5 +4,5 @@
 #include <ESPAsyncWebServer.h>
 
 void setupErrorPages(AsyncWebServer& server);
-
+void redirectToAccessDenied(AsyncWebServerRequest *request);
 #endif // PAGINASERRO_H

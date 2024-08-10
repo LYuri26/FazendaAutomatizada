@@ -4,18 +4,19 @@
 #include "ligadesliga.h"
 #include "autenticador.h"
 
+// Simplificação dos estados das luzes
+bool luzesLigadas[] = {false, false, false, false}; // 0: Casa, 1: Rua, 2: Pasto, 3: Geral
+
 void setupDashboardPage(AsyncWebServer &server)
 {
     server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-        if (!isAuthenticated(request))
-        {
+        if (!isAuthenticated(request)) {
             redirectToAccessDenied(request);
             return;
         }
 
         String html = R"rawliteral(
-<!DOCTYPE html>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -26,12 +27,11 @@ void setupDashboardPage(AsyncWebServer &server)
         body {
             font-family: Arial, sans-serif;
             background-color: #f8f9fa;
-            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            flex-direction: column;
+            margin: 0;
         }
         .dashboard-container {
             background-color: #fff;
@@ -55,7 +55,7 @@ void setupDashboardPage(AsyncWebServer &server)
             text-align: center;
             text-decoration: none;
             border-radius: 5px;
-            margin-bottom: 10px;
+            margin: 5px;
             width: 100%;
             max-width: 180px;
             cursor: pointer;
@@ -66,7 +66,6 @@ void setupDashboardPage(AsyncWebServer &server)
         .btn-luz-pasto { background-color: #ffc107; color: #fff; }
         .btn-luz-geral { background-color: #6c757d; color: #fff; }
         .btn-desligar { background-color: #dc3545; color: #fff; }
-        .btn-danger { background-color: #dc3545; color: #fff; } /* Cor personalizada para o botão de logout */
     </style>
 </head>
 <body>
@@ -76,29 +75,26 @@ void setupDashboardPage(AsyncWebServer &server)
         <button class="btn btn-luz-rua" id="toggleButton2">Luz da Rua</button>
         <button class="btn btn-luz-pasto" id="toggleButton3">Luz do Pasto</button>
         <button class="btn btn-luz-geral" id="toggleButton4">Luz Geral</button>
-        <a href="/logout" class="btn btn-danger">Logout</a>
+        <a href="/logout" class="btn btn-desligar">Logout</a>
     </div>
-    <div id="messageBox"></div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var buttons = document.querySelectorAll('.btn');
             buttons.forEach(function(button) {
-                if (button.classList.contains('btn-danger')) {
-                    // Skip the logout button
-                    return;
+                if (!button.classList.contains('btn-desligar')) {
+                    button.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        var action = button.classList.contains('btn-desligar') ? 'desligar' : 'ligar';
+                        var buttonId = button.id;
+                        fetch('/toggle?action=' + action + '&id=' + buttonId)
+                            .then(response => response.text())
+                            .then(data => {
+                                console.log('Resposta do servidor:', data);
+                                updateButtonState(button, action === 'ligar');
+                            })
+                            .catch(error => console.error('Erro ao enviar requisição:', error));
+                    });
                 }
-                button.addEventListener('click', function(event) {
-                    event.preventDefault();
-                    var action = button.classList.contains('btn-desligar') ? 'desligar' : 'ligar';
-                    var buttonId = button.id;
-                    fetch('/toggle?action=' + action + '&id=' + buttonId)
-                        .then(response => response.text())
-                        .then(data => {
-                            console.log('Resposta do servidor:', data);
-                            updateButtonState(button, action === 'ligar');
-                        })
-                        .catch(error => console.error('Erro ao enviar requisição:', error));
-                });
             });
 
             function updateButtonState(button, isOn) {
@@ -112,23 +108,21 @@ void setupDashboardPage(AsyncWebServer &server)
             }
 
             function resetButton(button) {
-                if (button.id === 'toggleButton1') {
-                    button.innerHTML = 'Luz da Casa';
-                    button.classList.remove('btn-desligar');
-                    button.classList.add('btn-luz-casa');
-                } else if (button.id === 'toggleButton2') {
-                    button.innerHTML = 'Luz da Rua';
-                    button.classList.remove('btn-desligar');
-                    button.classList.add('btn-luz-rua');
-                } else if (button.id === 'toggleButton3') {
-                    button.innerHTML = 'Luz do Pasto';
-                    button.classList.remove('btn-desligar');
-                    button.classList.add('btn-luz-pasto');
-                } else if (button.id === 'toggleButton4') {
-                    button.innerHTML = 'Luz Geral';
-                    button.classList.remove('btn-desligar');
-                    button.classList.add('btn-luz-geral');
-                }
+                var buttonMap = {
+                    'toggleButton1': 'btn-luz-casa',
+                    'toggleButton2': 'btn-luz-rua',
+                    'toggleButton3': 'btn-luz-pasto',
+                    'toggleButton4': 'btn-luz-geral'
+                };
+                var defaultText = {
+                    'toggleButton1': 'Luz da Casa',
+                    'toggleButton2': 'Luz da Rua',
+                    'toggleButton3': 'Luz do Pasto',
+                    'toggleButton4': 'Luz Geral'
+                };
+                button.innerHTML = defaultText[button.id];
+                button.classList.remove('btn-desligar');
+                button.classList.add(buttonMap[button.id]);
             }
         });
     </script>
@@ -140,9 +134,9 @@ void setupDashboardPage(AsyncWebServer &server)
 
     server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-        String stateJson = "{\"luzCasaLigada\":" + String(luzCasaLigada) +
-                           ", \"luzRuaLigada\":" + String(luzRuaLigada) +
-                           ", \"luzPastoLigada\":" + String(luzPastoLigada) +
-                           ", \"luzGeralLigada\":" + String(luzGeralLigada) + "}";
+        String stateJson = "{\"luzCasaLigada\":" + String(luzesLigadas[0]) +
+                           ", \"luzRuaLigada\":" + String(luzesLigadas[1]) +
+                           ", \"luzPastoLigada\":" + String(luzesLigadas[2]) +
+                           ", \"luzGeralLigada\":" + String(luzesLigadas[3]) + "}";
         request->send(200, "application/json", stateJson); });
 }

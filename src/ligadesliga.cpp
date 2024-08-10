@@ -4,69 +4,65 @@
 #include "autenticador.h"
 #include "ligadesliga.h"
 
-const int pinoLuzCasa = 2;
-const int pinoLuzRua = 3;
-const int pinoLuzPasto = 4;
+// Declaração antecipada da função
+void toggleLuz(int index, String action, AsyncWebServerRequest *request);
 
-const String arquivoEstadoCasa = "/estadoLuzCasa.txt";
-const String arquivoEstadoRua = "/estadoLuzRua.txt";
-const String arquivoEstadoPasto = "/estadoLuzPasto.txt";
-const String arquivoEstadoGeral = "/estadoLuzGeral.txt";
+const int pinoLuzCasa = D2;
+const int pinoLuzRua = D3;
+const int pinoLuzPasto = D4;
 
-bool luzCasaLigada = false;
-bool luzRuaLigada = false;
-bool luzPastoLigada = false;
-bool luzGeralLigada = false;
+const String arquivoEstadoLuz[] = {"/estadoLuzCasa.txt", "/estadoLuzRua.txt", "/estadoLuzPasto.txt", "/estadoLuzGeral.txt"};
+bool luzEstado[] = {false, false, false, false}; // 0: Casa, 1: Rua, 2: Pasto, 3: Geral
 
-void handleToggleAction(AsyncWebServer &server) {
-    server.on("/toggle", HTTP_ANY, [](AsyncWebServerRequest *request) {
+void handleToggleAction(AsyncWebServer &server)
+{
+    server.on("/toggle", HTTP_ANY, [](AsyncWebServerRequest *request)
+    {
         if (!isAuthenticated(request)) {
             redirectToAccessDenied(request);
             return;
         }
 
         String action = request->getParam("action")->value();
-        String id = request->getParam("id")->value();
+        int id = request->getParam("id")->value().toInt();
 
-        if (id == "toggleButton1") { // Luz da Casa
-            toggleLuzCasa(action, request);
-        } else if (id == "toggleButton2") { // Luz da Rua
-            toggleLuzRua(action, request);
-        } else if (id == "toggleButton3") { // Luz do Pasto
-            toggleLuzPasto(action, request);
-        } else if (id == "toggleButton4") { // Luz Geral
-            toggleLuzGeral(action, request);
+        if (id >= 0 && id < 4) {
+            toggleLuz(id, action, request);
         } else {
             request->send(400, "text/plain", "Botão inválido!");
         }
     });
 }
 
-
-void initLittleFS() {
-    if (!LittleFS.begin()) {
-        Serial.println("Erro ao iniciar LittleFS. O sistema de arquivos não pôde ser montado.");
+void initLittleFS()
+{
+    if (!LittleFS.begin())
+    {
+        Serial.println("Erro ao iniciar LittleFS.");
         return;
     }
     Serial.println("LittleFS inicializado com sucesso.");
 }
 
-bool readEstadoLuz(const String &arquivoEstado) {
-    File file = LittleFS.open(arquivoEstado, "r");
-    if (!file) {
+bool readEstadoLuz(int index)
+{
+    File file = LittleFS.open(arquivoEstadoLuz[index], "r");
+    if (!file)
+    {
         Serial.println("Arquivo de estado não encontrado, assumindo estado desligado.");
         return false;
     }
 
     String state = file.readStringUntil('\n');
     file.close();
-    bool estado = state.toInt() == 1;
-    return estado;
+    return state.toInt() == 1;
 }
 
-void saveEstadoLuz(const String &arquivoEstado, bool state) {
-    File file = LittleFS.open(arquivoEstado, "w");
-    if (!file) {
+void saveEstadoLuz(int index, bool state)
+{
+    File file = LittleFS.open(arquivoEstadoLuz[index], "w");
+    if (!file)
+    {
         Serial.println("Erro ao abrir o arquivo para escrita.");
         return;
     }
@@ -75,7 +71,8 @@ void saveEstadoLuz(const String &arquivoEstado, bool state) {
     file.close();
 }
 
-void setupLigaDesliga(AsyncWebServer &server) {
+void setupLigaDesliga(AsyncWebServer &server)
+{
     Serial.println("Configurando o servidor Web para controle das luzes.");
 
     initLittleFS();
@@ -84,80 +81,37 @@ void setupLigaDesliga(AsyncWebServer &server) {
     pinMode(pinoLuzRua, OUTPUT);
     pinMode(pinoLuzPasto, OUTPUT);
 
-    luzCasaLigada = readEstadoLuz(arquivoEstadoCasa);
-    luzRuaLigada = readEstadoLuz(arquivoEstadoRua);
-    luzPastoLigada = readEstadoLuz(arquivoEstadoPasto);
-    luzGeralLigada = readEstadoLuz(arquivoEstadoGeral);
+    luzEstado[0] = readEstadoLuz(0);
+    luzEstado[1] = readEstadoLuz(1);
+    luzEstado[2] = readEstadoLuz(2);
+    luzEstado[3] = readEstadoLuz(3);
 
-    digitalWrite(pinoLuzCasa, luzCasaLigada ? HIGH : LOW);
-    digitalWrite(pinoLuzRua, luzRuaLigada ? HIGH : LOW);
-    digitalWrite(pinoLuzPasto, luzPastoLigada ? HIGH : LOW);
+    digitalWrite(pinoLuzCasa, luzEstado[0] ? HIGH : LOW);
+    digitalWrite(pinoLuzRua, luzEstado[1] ? HIGH : LOW);
+    digitalWrite(pinoLuzPasto, luzEstado[2] ? HIGH : LOW);
 
     handleToggleAction(server);
 
     Serial.println("Configuração concluída.");
 }
 
-void toggleLuzCasa(String action, AsyncWebServerRequest *request) {
-    if (action == "ligar") {
-        luzCasaLigada = true;
-        digitalWrite(pinoLuzCasa, HIGH);
-        request->send(200, "text/plain", "Luz da Casa ligada!");
-    } else if (action == "desligar") {
-        luzCasaLigada = false;
-        digitalWrite(pinoLuzCasa, LOW);
-        request->send(200, "text/plain", "Luz da Casa desligada!");
-    } else {
+void toggleLuz(int index, String action, AsyncWebServerRequest *request)
+{
+    if (action == "ligar")
+    {
+        luzEstado[index] = true;
+        digitalWrite(index == 0 ? pinoLuzCasa : index == 1 ? pinoLuzRua : pinoLuzPasto, HIGH);
+        request->send(200, "text/plain", "Luz " + String(index) + " ligada!");
+    }
+    else if (action == "desligar")
+    {
+        luzEstado[index] = false;
+        digitalWrite(index == 0 ? pinoLuzCasa : index == 1 ? pinoLuzRua : pinoLuzPasto, LOW);
+        request->send(200, "text/plain", "Luz " + String(index) + " desligada!");
+    }
+    else
+    {
         request->send(400, "text/plain", "Ação inválida!");
     }
-    saveEstadoLuz(arquivoEstadoCasa, luzCasaLigada);
-}
-
-void toggleLuzRua(String action, AsyncWebServerRequest *request) {
-    if (action == "ligar") {
-        luzRuaLigada = true;
-        digitalWrite(pinoLuzRua, HIGH);
-        request->send(200, "text/plain", "Luz da Rua ligada!");
-    } else if (action == "desligar") {
-        luzRuaLigada = false;
-        digitalWrite(pinoLuzRua, LOW);
-        request->send(200, "text/plain", "Luz da Rua desligada!");
-    } else {
-        request->send(400, "text/plain", "Ação inválida!");
-    }
-    saveEstadoLuz(arquivoEstadoRua, luzRuaLigada);
-}
-
-void toggleLuzPasto(String action, AsyncWebServerRequest *request) {
-    if (action == "ligar") {
-        luzPastoLigada = true;
-        digitalWrite(pinoLuzPasto, HIGH);
-        request->send(200, "text/plain", "Luz do Pasto ligada!");
-    } else if (action == "desligar") {
-        luzPastoLigada = false;
-        digitalWrite(pinoLuzPasto, LOW);
-        request->send(200, "text/plain", "Luz do Pasto desligada!");
-    } else {
-        request->send(400, "text/plain", "Ação inválida!");
-    }
-    saveEstadoLuz(arquivoEstadoPasto, luzPastoLigada);
-}
-
-void toggleLuzGeral(String action, AsyncWebServerRequest *request) {
-    if (action == "ligar") {
-        luzGeralLigada = true;
-        digitalWrite(pinoLuzCasa, HIGH);
-        digitalWrite(pinoLuzRua, HIGH);
-        digitalWrite(pinoLuzPasto, HIGH);
-        request->send(200, "text/plain", "Luz Geral ligada! Todas as luzes foram ligadas.");
-    } else if (action == "desligar") {
-        luzGeralLigada = false;
-        digitalWrite(pinoLuzCasa, LOW);
-        digitalWrite(pinoLuzRua, LOW);
-        digitalWrite(pinoLuzPasto, LOW);
-        request->send(200, "text/plain", "Luz Geral desligada! Todas as luzes foram desligadas.");
-    } else {
-        request->send(400, "text/plain", "Ação inválida!");
-    }
-    saveEstadoLuz(arquivoEstadoGeral, luzGeralLigada);
+    saveEstadoLuz(index, luzEstado[index]);
 }

@@ -2,13 +2,8 @@
 #include <ESPAsyncWebServer.h>
 
 String sessionId = "";
-bool userLoggedIn = false;
-String loggedInUser = "";
-
-String generateSessionId() {
-    String newSessionId = String(millis(), HEX);
-    return newSessionId;
-}
+unsigned long sessionStartTime = 0;
+const unsigned long sessionTimeout = 5 * 60 * 1000; // 5 minutos em milissegundos
 
 bool isAuthenticated(AsyncWebServerRequest *request) {
     if (request->hasHeader("Cookie")) {
@@ -17,7 +12,13 @@ bool isAuthenticated(AsyncWebServerRequest *request) {
         if (sessionIndex != -1) {
             String sessionValue = cookie.substring(sessionIndex + 11);
             if (sessionValue.equals(sessionId)) {
-                return true;
+                // Verificar se a sessão ainda é válida
+                if (millis() - sessionStartTime < sessionTimeout) {
+                    return true;
+                } else {
+                    // Sessão expirada
+                    sessionId = ""; // Invalidar sessão
+                }
             }
         }
     }
@@ -25,34 +26,19 @@ bool isAuthenticated(AsyncWebServerRequest *request) {
 }
 
 void handleLogin(AsyncWebServerRequest *request) {
-    String username;
-    String password;
+    if (request->hasParam("username", true) && request->hasParam("password", true)) {
+        String username = request->getParam("username", true)->value();
+        String password = request->getParam("password", true)->value();
 
-    if (request->hasParam("username", true)) {
-        username = request->getParam("username", true)->value();
-    } else {
-        request->redirect("/?login_failed=true");
-        return;
-    }
-
-    if (request->hasParam("password", true)) {
-        password = request->getParam("password", true)->value();
-    } else {
-        request->redirect("/?login_failed=true");
-        return;
-    }
-
-    if (username == "admin" && password == "admin123") {
-        if (!userLoggedIn) {
-            userLoggedIn = true;
-            loggedInUser = username;
-            sessionId = generateSessionId();
+        if (username == "admin" && password == "admin123") {
+            sessionId = String(millis(), HEX);
+            sessionStartTime = millis();
             AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "");
             response->addHeader("Set-Cookie", "session_id=" + sessionId + "; Path=/; HttpOnly");
             response->addHeader("Location", "/dashboard");
             request->send(response);
         } else {
-            request->redirect("/usuario-ja-logado");
+            request->redirect("/?login_failed=true");
         }
     } else {
         request->redirect("/?login_failed=true");
@@ -60,9 +46,7 @@ void handleLogin(AsyncWebServerRequest *request) {
 }
 
 void handleLogout(AsyncWebServerRequest *request) {
-    if (userLoggedIn) {
-        userLoggedIn = false;
-        loggedInUser = "";
+    if (isAuthenticated(request)) {
         sessionId = "";
         AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "");
         response->addHeader("Set-Cookie", "session_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly");
@@ -73,14 +57,10 @@ void handleLogout(AsyncWebServerRequest *request) {
     }
 }
 
-void notAuthenticated(AsyncWebServerRequest *request) {
-    request->redirect("/");
-}
-
 void handleDashboard(AsyncWebServerRequest *request) {
     if (isAuthenticated(request)) {
         request->send(200, "text/plain", "Bem-vindo ao Dashboard!");
     } else {
-        notAuthenticated(request);
+        request->redirect("/");
     }
 }

@@ -1,11 +1,9 @@
 #include <ESPAsyncWebServer.h>
-#include <LittleFS.h>
-#include "index.h"
 
 // Função para configurar a página de login
 void setupIndexPage(AsyncWebServer& server) {
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        // HTML da página de login com placeholders para mensagens de erro
+        // HTML simplificado da página de login
         String html = R"rawliteral(
             <!DOCTYPE html>
             <html lang="pt-br">
@@ -29,8 +27,7 @@ void setupIndexPage(AsyncWebServer& server) {
                         border: 1px solid #ddd;
                         border-radius: 4px;
                         text-align: center;
-                        width: 93.5%;
-                        max-width: 300px;
+                        width: 300px;
                     }
                     .login-title {
                         font-size: 20px;
@@ -58,15 +55,12 @@ void setupIndexPage(AsyncWebServer& server) {
                         border: none;
                         border-radius: 4px;
                         cursor: pointer;
-                        text-align: center;
                     }
                     .btn-secondary {
                         background-color: #6c757d;
-                        margin-top: 10px;
                     }
                     .btn-warning {
                         background-color: #ffc107;
-                        margin-top: 10px;
                     }
                     .text-danger {
                         color: #dc3545;
@@ -77,7 +71,7 @@ void setupIndexPage(AsyncWebServer& server) {
             <body>
                 <div class="login-container">
                     <h2 class="login-title">Faça o Login</h2>
-                    <form action="/login" method="post" onsubmit="storeLoginData(event)">
+                    <form action="/login" method="post">
                         <div class="form-group">
                             <input type="text" name="username" placeholder="Usuário" required>
                         </div>
@@ -90,15 +84,6 @@ void setupIndexPage(AsyncWebServer& server) {
                     <button onclick="window.location.href='/creditos'" class="btn btn-secondary">Créditos</button>
                     <button onclick="window.location.href='/wifigerenciamento'" class="btn btn-warning">Gerenciamento Wi-Fi</button>
                 </div>
-                <script>
-                    function storeLoginData(event) {
-                        event.preventDefault();
-                        var username = document.querySelector('input[name="username"]').value;
-                        var password = document.querySelector('input[name="password"]').value;
-                        console.log('Tentando login com usuário: ' + username + ' e senha: ' + password);
-                        event.target.submit();
-                    }
-                </script>
             </body>
             </html>
         )rawliteral";
@@ -106,7 +91,7 @@ void setupIndexPage(AsyncWebServer& server) {
         // Verifica se há um parâmetro na URL que indica falha de login
         String errorMessage;
         if (request->hasParam("login_failed")) {
-            errorMessage = "Usuário ou senha incorretos. Tente novamente.";
+            errorMessage = "Usuário ou senha incorretos.";
         } else {
             errorMessage = "";
         }
