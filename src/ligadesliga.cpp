@@ -7,17 +7,17 @@
 // Declaração antecipada da função
 void toggleLuz(int index, String action, AsyncWebServerRequest *request);
 
-const int pinoLuzCasa = 1;
-const int pinoLuzRua = 2;
-const int pinoLuzPasto = 3;
+const int pinoLuzCasa = D4;
+const int pinoLuzRua = D2;
+const int pinoLuzPasto = D1;
 
 const String arquivoEstadoLuz[] = {"/estadoLuzCasa.txt", "/estadoLuzRua.txt", "/estadoLuzPasto.txt", "/estadoLuzGeral.txt"};
 bool luzEstado[] = {false, false, false, false}; // 0: Casa, 1: Rua, 2: Pasto, 3: Geral
 
 void handleToggleAction(AsyncWebServer &server)
 {
-    server.on("/toggle", HTTP_ANY, [](AsyncWebServerRequest *request)
-    {
+    server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
         if (!isAuthenticated(request)) {
             redirectToAccessDenied(request);
             return;
@@ -30,8 +30,7 @@ void handleToggleAction(AsyncWebServer &server)
             toggleLuz(id, action, request);
         } else {
             request->send(400, "text/plain", "Botão inválido!");
-        }
-    });
+        } });
 }
 
 void initLittleFS()
@@ -98,22 +97,47 @@ void setupLigaDesliga(AsyncWebServer &server)
 void toggleLuz(int index, String action, AsyncWebServerRequest *request)
 {
     bool estado = (action == "ligar");
-    luzEstado[index] = estado;
 
-    switch (index) {
-        case 0: digitalWrite(pinoLuzCasa, estado ? HIGH : LOW); break;
-        case 1: digitalWrite(pinoLuzRua, estado ? HIGH : LOW); break;
-        case 2: digitalWrite(pinoLuzPasto, estado ? HIGH : LOW); break;
-        case 3: 
-            // Luz Geral
-            bool newState = !estado;
-            for (int i = 0; i < 4; i++) luzEstado[i] = newState;
-            digitalWrite(pinoLuzCasa, newState ? HIGH : LOW);
-            digitalWrite(pinoLuzRua, newState ? HIGH : LOW);
-            digitalWrite(pinoLuzPasto, newState ? HIGH : LOW);
-            break;
+    // Atualiza o estado da luz específica
+    if (index < 3)
+    {
+        luzEstado[index] = estado;
+        digitalWrite(index == 0 ? pinoLuzCasa : index == 1 ? pinoLuzRua
+                                                           : pinoLuzPasto,
+                     estado ? HIGH : LOW);
+        saveEstadoLuz(index, estado);
+
+        // Adiciona feedback ao Serial
+        Serial.print("Luz ");
+        Serial.print(index == 0 ? "Casa" : index == 1 ? "Rua" : "Pasto");
+        Serial.print(" está ");
+        Serial.println(estado ? "ligada" : "desligada");
+
+        request->send(200, "text/plain", "Luz " + String(index) + " " + (estado ? "ligada" : "desligada") + "!");
     }
+    else if (index == 3)
+    {
+        // Luz Geral
+        bool newState = !estado; // Inverte o estado da luz geral
+        for (int i = 0; i < 3; i++)
+        {
+            luzEstado[i] = newState;
+            digitalWrite(i == 0 ? pinoLuzCasa : i == 1 ? pinoLuzRua
+                                                       : pinoLuzPasto,
+                         newState ? HIGH : LOW);
+            saveEstadoLuz(i, newState);
 
-    saveEstadoLuz(index, luzEstado[index]);
-    request->send(200, "text/plain", "Luz " + String(index) + " " + (estado ? "ligada" : "desligada") + "!");
+            // Adiciona feedback ao Serial
+            Serial.print("Luz ");
+            Serial.print(i == 0 ? "Casa" : i == 1 ? "Rua" : "Pasto");
+            Serial.print(" está ");
+            Serial.println(newState ? "ligada" : "desligada");
+        }
+        luzEstado[3] = newState;
+
+        Serial.print("Luz Geral está ");
+        Serial.println(newState ? "ligada" : "desligada");
+
+        request->send(200, "text/plain", "Luz Geral " + String(newState ? "ligada" : "desligada") + "!");
+    }
 }
