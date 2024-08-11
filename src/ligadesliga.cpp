@@ -12,8 +12,8 @@ const int pinoLuzRua = D2;
 const int pinoLuzPasto = D1;
 
 const String arquivoEstadoLuz[] = {"/estadoLuzCasa.txt", "/estadoLuzRua.txt", "/estadoLuzPasto.txt", "/estadoLuzGeral.txt"};
-bool luzEstado[] = {false, false, false, false}; // 0: Casa, 1: Rua, 2: Pasto, 3: Geral
-bool pinoLuzGeral = false;                       // Corrigido para refletir estado, não pino
+bool luzEstado[] = {false, false, false}; 
+bool pinoLuzGeral = false;
 
 void handleToggleAction(AsyncWebServer &server)
 {
