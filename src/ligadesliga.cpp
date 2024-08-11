@@ -7,9 +7,9 @@
 // Declaração antecipada da função
 void toggleLuz(int index, String action, AsyncWebServerRequest *request);
 
-const int pinoLuzCasa = 10;
-const int pinoLuzRua = 11;
-const int pinoLuzPasto = 12;
+const int pinoLuzCasa = 1;
+const int pinoLuzRua = 2;
+const int pinoLuzPasto = 3;
 
 const String arquivoEstadoLuz[] = {"/estadoLuzCasa.txt", "/estadoLuzRua.txt", "/estadoLuzPasto.txt", "/estadoLuzGeral.txt"};
 bool luzEstado[] = {false, false, false, false}; // 0: Casa, 1: Rua, 2: Pasto, 3: Geral
@@ -97,21 +97,23 @@ void setupLigaDesliga(AsyncWebServer &server)
 
 void toggleLuz(int index, String action, AsyncWebServerRequest *request)
 {
-    if (action == "ligar")
-    {
-        luzEstado[index] = true;
-        digitalWrite(index == 0 ? pinoLuzCasa : index == 1 ? pinoLuzRua : pinoLuzPasto, HIGH);
-        request->send(200, "text/plain", "Luz " + String(index) + " ligada!");
+    bool estado = (action == "ligar");
+    luzEstado[index] = estado;
+
+    switch (index) {
+        case 0: digitalWrite(pinoLuzCasa, estado ? HIGH : LOW); break;
+        case 1: digitalWrite(pinoLuzRua, estado ? HIGH : LOW); break;
+        case 2: digitalWrite(pinoLuzPasto, estado ? HIGH : LOW); break;
+        case 3: 
+            // Luz Geral
+            bool newState = !estado;
+            for (int i = 0; i < 4; i++) luzEstado[i] = newState;
+            digitalWrite(pinoLuzCasa, newState ? HIGH : LOW);
+            digitalWrite(pinoLuzRua, newState ? HIGH : LOW);
+            digitalWrite(pinoLuzPasto, newState ? HIGH : LOW);
+            break;
     }
-    else if (action == "desligar")
-    {
-        luzEstado[index] = false;
-        digitalWrite(index == 0 ? pinoLuzCasa : index == 1 ? pinoLuzRua : pinoLuzPasto, LOW);
-        request->send(200, "text/plain", "Luz " + String(index) + " desligada!");
-    }
-    else
-    {
-        request->send(400, "text/plain", "Ação inválida!");
-    }
+
     saveEstadoLuz(index, luzEstado[index]);
+    request->send(200, "text/plain", "Luz " + String(index) + " " + (estado ? "ligada" : "desligada") + "!");
 }

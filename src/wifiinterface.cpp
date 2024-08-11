@@ -15,34 +15,31 @@ const char *getWiFiGerenciamentoPage()
             background-color: #f0f0f0;
         }
         .container {
-            max-width: 400px;
+            max-width: 360px;
             margin: auto;
-            padding: 20px;
+            padding: 15px;
             background: #fff;
-            border: 1px solid #ddd;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         h2 {
             text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 20px;
         }
-        input[type="text"], input[type="password"] {
-            width: 95%;
+        input[type="text"], input[type="password"], button {
+            width: 100%;
             padding: 8px;
-            margin-bottom: 10px;
+            margin: 10px 0;
             border: 1px solid #ddd;
             border-radius: 4px;
+            box-sizing: border-box;
         }
         button {
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 4px;
+            background-color: #28a745;
             color: #fff;
             cursor: pointer;
-            margin-top: 10px;
-        }
-        .btn-submit {
-            background-color: #28a745;
+            border: none;
         }
         .btn-back {
             background-color: #007bff;
@@ -50,15 +47,11 @@ const char *getWiFiGerenciamentoPage()
         .btn-delete {
             color: #dc3545;
             text-decoration: none;
+            font-size: 0.9em;
         }
-        #saved-networks {
-            margin-top: 20px;
-        }
-        #device-ip {
-            margin-top: 10px;
-            padding: 10px;
-            background: #e9ecef;
-            border-radius: 4px;
+        #saved-networks, #device-ip {
+            margin-top: 15px;
+            font-size: 0.9em;
         }
     </style>
 </head>
@@ -80,28 +73,8 @@ const char *getWiFiGerenciamentoPage()
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            fetch('/listadewifi')
-                .then(response => response.text())
-                .then(data => {
-                    const savedNetworks = document.getElementById('saved-networks');
-                    savedNetworks.innerHTML = data.trim() ? 
-                        data.trim().split('\n').map(line => {
-                            const [ssid] = line.split(',');
-                            return `<p>SSID: ${ssid} <a class="btn-delete" href="/excluirwifi?ssid=${ssid}">Excluir</a></p>`;
-                        }).join('') : '<p>Nenhuma rede salva encontrada.</p>';
-                })
-                .catch(() => {
-                    document.getElementById('saved-networks').innerHTML = '<p>Erro ao buscar redes salvas.</p>';
-                });
-
-            fetch('/getip')
-                .then(response => response.text())
-                .then(ip => {
-                    document.getElementById('device-ip').innerHTML = `<p>IP do Dispositivo: ${ip}</p>`;
-                })
-                .catch(() => {
-                    document.getElementById('device-ip').innerHTML = '<p>Erro ao buscar IP do dispositivo.</p>';
-                });
+            fetchSavedNetworks();
+            fetchDeviceIP();
 
             document.getElementById('toggle-password').addEventListener('click', function() {
                 const passwordField = document.getElementById('password');
@@ -120,12 +93,40 @@ const char *getWiFiGerenciamentoPage()
                     document.getElementById('message').textContent = 'Rede conectada com sucesso!';
                     this.reset();
                     fetchSavedNetworks();
+                    fetchDeviceIP(); // Atualiza o IP após salvar a rede
                 })
                 .catch(() => {
                     document.getElementById('message').textContent = 'Erro ao conectar na rede';
                 });
             });
         });
+
+        function fetchSavedNetworks() {
+            fetch('/listadewifi')
+                .then(response => response.text())
+                .then(data => {
+                    const savedNetworks = document.getElementById('saved-networks');
+                    savedNetworks.innerHTML = data.trim() ? 
+                        data.trim().split('\n').map(line => {
+                            const [ssid] = line.split(',');
+                            return `<p>SSID: ${ssid} <a class="btn-delete" href="/excluirwifi?ssid=${ssid}">Excluir</a></p>`;
+                        }).join('') : '<p>Nenhuma rede salva encontrada.</p>';
+                })
+                .catch(() => {
+                    document.getElementById('saved-networks').innerHTML = '<p>Erro ao buscar redes salvas.</p>';
+                });
+        }
+
+        function fetchDeviceIP() {
+            fetch('/getip')
+                .then(response => response.text())
+                .then(ip => {
+                    document.getElementById('device-ip').innerHTML = `<p>IP do Dispositivo: ${ip}</p>`;
+                })
+                .catch(() => {
+                    document.getElementById('device-ip').innerHTML = '<p>Erro ao buscar IP do dispositivo.</p>';
+                });
+        }
     </script>
 </body>
 </html>
