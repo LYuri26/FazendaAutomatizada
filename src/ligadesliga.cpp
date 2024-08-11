@@ -4,7 +4,6 @@
 #include "autenticador.h"
 #include "ligadesliga.h"
 
-// Declaração antecipada da função
 void toggleLuz(int index, String action, AsyncWebServerRequest *request);
 
 const int pinoLuzCasa = D4;
@@ -40,10 +39,8 @@ void initLittleFS()
 {
     if (!LittleFS.begin())
     {
-        Serial.println("Erro ao iniciar LittleFS.");
         return;
     }
-    Serial.println("LittleFS inicializado com sucesso.");
 }
 
 bool readEstadoLuz(int index)
@@ -51,7 +48,6 @@ bool readEstadoLuz(int index)
     File file = LittleFS.open(arquivoEstadoLuz[index], "r");
     if (!file)
     {
-        Serial.println("Arquivo de estado não encontrado, assumindo estado desligado.");
         return false;
     }
 
@@ -65,7 +61,6 @@ void saveEstadoLuz(int index, bool state)
     File file = LittleFS.open(arquivoEstadoLuz[index], "w");
     if (!file)
     {
-        Serial.println("Erro ao abrir o arquivo para escrita.");
         return;
     }
 
@@ -75,28 +70,22 @@ void saveEstadoLuz(int index, bool state)
 
 void setupLigaDesliga(AsyncWebServer &server)
 {
-    Serial.println("Configurando o servidor Web para controle das luzes.");
-
     initLittleFS();
 
     pinMode(pinoLuzCasa, OUTPUT);
     pinMode(pinoLuzRua, OUTPUT);
     pinMode(pinoLuzPasto, OUTPUT);
 
-    // Inicializa o estado das luzes
     luzEstado[0] = readEstadoLuz(0);
     luzEstado[1] = readEstadoLuz(1);
     luzEstado[2] = readEstadoLuz(2);
     pinoLuzGeral = readEstadoLuz(3);
 
-    // Atualiza os pinos com base no estado da luz geral
     digitalWrite(pinoLuzCasa, pinoLuzGeral ? HIGH : LOW);
     digitalWrite(pinoLuzRua, pinoLuzGeral ? HIGH : LOW);
     digitalWrite(pinoLuzPasto, pinoLuzGeral ? HIGH : LOW);
 
     handleToggleAction(server);
-
-    Serial.println("Configuração concluída.");
 }
 
 void toggleLuz(int index, String action, AsyncWebServerRequest *request)
@@ -108,7 +97,6 @@ void toggleLuz(int index, String action, AsyncWebServerRequest *request)
         return;
     }
 
-    // Atualiza o estado da luz específica
     switch (index) {
         case 0:
             luzEstado[0] = estado;
@@ -126,18 +114,16 @@ void toggleLuz(int index, String action, AsyncWebServerRequest *request)
             saveEstadoLuz(2, estado);
             break;
         case 3:
-            // Luz Geral
             pinoLuzGeral = estado;
             for (int i = 0; i < 3; i++) {
                 luzEstado[i] = pinoLuzGeral;
                 digitalWrite(i == 0 ? pinoLuzCasa : i == 1 ? pinoLuzRua : pinoLuzPasto, pinoLuzGeral ? HIGH : LOW);
                 saveEstadoLuz(i, pinoLuzGeral);
             }
-            saveEstadoLuz(3, pinoLuzGeral); // Atualiza o estado da luz geral
+            saveEstadoLuz(3, pinoLuzGeral);
             break;
     }
 
-    // Adiciona feedback ao Serial
     Serial.print("Luz ");
     Serial.print(index == 0 ? "Casa" : index == 1 ? "Rua" : index == 2 ? "Pasto" : "Geral");
     Serial.print(" está ");

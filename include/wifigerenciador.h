@@ -17,4 +17,4 @@ extern bool scanning;
 extern unsigned long lastScan;
 extern const unsigned long scanInterval;
 
-#endif // WIFIGERENCIADOR_H
+#endif

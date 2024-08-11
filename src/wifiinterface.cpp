@@ -1,3 +1,7 @@
+#include <ESPAsyncWebServer.h>
+#include <LittleFS.h>
+
+
 const char *getWiFiGerenciamentoPage()
 {
     return R"rawliteral(
@@ -88,12 +92,11 @@ const char *getWiFiGerenciamentoPage()
                     method: this.method,
                     body: new FormData(this)
                 })
-                .then(response => response.text())
                 .then(() => {
                     document.getElementById('message').textContent = 'Rede conectada com sucesso!';
                     this.reset();
                     fetchSavedNetworks();
-                    fetchDeviceIP(); // Atualiza o IP após salvar a rede
+                    fetchDeviceIP();
                 })
                 .catch(() => {
                     document.getElementById('message').textContent = 'Erro ao conectar na rede';

@@ -5,4 +5,4 @@
 
 void setupIndexPage(AsyncWebServer& server);
 
-#endif // INDEX_H
+#endif

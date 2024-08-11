@@ -3,4 +3,4 @@
 
 const char* getWiFiGerenciamentoPage();
 
-#endif // WIFIINTERFACE_H
+#endif

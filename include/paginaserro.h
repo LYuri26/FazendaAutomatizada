@@ -5,4 +5,4 @@
 
 void setupErrorPages(AsyncWebServer& server);
 void redirectToAccessDenied(AsyncWebServerRequest *request);
-#endif // PAGINASERRO_H
+#endif

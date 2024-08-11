@@ -13,4 +13,4 @@ bool isAuthenticated(AsyncWebServerRequest *request);
 void notAuthenticated(AsyncWebServerRequest *request);
 void redirectToAccessDenied(AsyncWebServerRequest *request);
 
-#endif // AUTENTICADOR_H
+#endif 

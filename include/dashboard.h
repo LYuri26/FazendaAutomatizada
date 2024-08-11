@@ -6,4 +6,4 @@
 void handleToggleAction(AsyncWebServer& server);
 void setupDashboardPage(AsyncWebServer &server);
 
-#endif // DASHBOARD_H
+#endif

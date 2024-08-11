@@ -12,7 +12,6 @@
 #include "wifigerenciador.h"
 #include "wifiinterface.h"
 
-// Definindo o servidor web
 AsyncWebServer server(80);
 
 void setupLittleFS();
@@ -23,7 +22,7 @@ void redirectToAccessDenied(AsyncWebServerRequest *request);
 void setup()
 {
     Serial.begin(115200);
-    setupLittleFS(); // Corrigido para garantir que o LittleFS esteja configurado antes do uso
+    setupLittleFS();
     loadSavedWiFiNetworks();
 
     if (!connectionAttempted)
@@ -40,20 +39,18 @@ void loop()
     unsigned long currentTime = millis();
 
     if (currentTime - lastCheckTime > 600000)
-    { // 10 minutos em milissegundos
+    {
         lastCheckTime = currentTime;
 
         if (isAPMode)
         {
             Serial.println("Modo Access Point ativo.");
-            Serial.println("Verificando solicitações no modo AP...");
         }
         else
         {
             if (WiFi.status() != WL_CONNECTED)
             {
-                Serial.println("Desconectado da rede Wi-Fi.");
-                bool connected = connectToSavedNetworks(); // Corrigido para usar a função atualizada
+                bool connected = connectToSavedNetworks();
                 if (connected)
                 {
                     Serial.println("Reconectado com sucesso.");
@@ -73,25 +70,22 @@ void loop()
         }
     }
 
-    delay(1000); // Aguarda 1 segundo antes da próxima iteração do loop
+    delay(1000);
 }
 
 void setupLittleFS()
 {
     if (!LittleFS.begin())
     {
-        Serial.println("Erro ao montar o sistema de arquivos LittleFS.");
         while (true)
         {
             delay(1000);
-        } // Loop infinito em caso de erro
+        }
     }
-    Serial.println("Sistema de arquivos LittleFS montado com sucesso.");
 }
 
 void setupServer()
 {
-
     setupIndexPage(server);
     setupCreditosPage(server);
     setupDashboardPage(server);

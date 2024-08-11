@@ -17,4 +17,4 @@ extern const int pinoLuzPasto;
 extern bool pinoLuzGeral;
 extern bool luzEstado[4];
 
-#endif // LIGADESLIGA_H
+#endif

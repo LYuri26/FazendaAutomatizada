@@ -1,9 +1,7 @@
 #include <ESPAsyncWebServer.h>
 
-// Função para configurar a página de login
 void setupIndexPage(AsyncWebServer& server) {
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        // HTML simplificado da página de login
         String html = R"rawliteral(
             <!DOCTYPE html>
             <html lang="pt-br">
@@ -88,7 +86,6 @@ void setupIndexPage(AsyncWebServer& server) {
             </html>
         )rawliteral";
 
-        // Verifica se há um parâmetro na URL que indica falha de login
         String errorMessage;
         if (request->hasParam("login_failed")) {
             errorMessage = "Usuário ou senha incorretos.";
@@ -96,7 +93,6 @@ void setupIndexPage(AsyncWebServer& server) {
             errorMessage = "";
         }
 
-        // Substitui o placeholder com a mensagem de erro se houver
         html.replace("%ERROR_MESSAGE%", errorMessage);
         request->send(200, "text/html", html);
     });

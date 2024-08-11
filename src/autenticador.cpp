@@ -12,12 +12,10 @@ bool isAuthenticated(AsyncWebServerRequest *request) {
         if (sessionIndex != -1) {
             String sessionValue = cookie.substring(sessionIndex + 11);
             if (sessionValue.equals(sessionId)) {
-                // Verificar se a sessão ainda é válida
                 if (millis() - sessionStartTime < sessionTimeout) {
                     return true;
                 } else {
-                    // Sessão expirada
-                    sessionId = ""; // Invalidar sessão
+                    sessionId = "";
                 }
             }
         }

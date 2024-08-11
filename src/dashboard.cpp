@@ -4,10 +4,26 @@
 #include "ligadesliga.h"
 #include "autenticador.h"
 
-void setupDashboardPage(AsyncWebServer &server)
-{
-    server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
+// Função para ler o estado da luz de um arquivo
+bool readStateFromFile(const char* path) {
+    if (!LittleFS.begin()) {
+        Serial.println("Falha ao montar o sistema de arquivos");
+        return false;
+    }
+
+    if (LittleFS.exists(path)) {
+        File file = LittleFS.open(path, "r");
+        if (file) {
+            String content = file.readString();
+            file.close();
+            return content.toInt() == 1;  // Assumindo que 1 representa ligado e 0 desligado
+        }
+    }
+    return false;
+}
+
+void setupDashboardPage(AsyncWebServer &server) {
+    server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request) {
         if (!isAuthenticated(request)) {
             redirectToAccessDenied(request);
             return;
@@ -38,7 +54,6 @@ void setupDashboardPage(AsyncWebServer &server)
             text-align: center;
             width: 90%;
             max-width: 300px;
-            margin: auto;
         }
         .btn {
             display: block;
@@ -63,74 +78,62 @@ void setupDashboardPage(AsyncWebServer &server)
 <body>
     <div class="dashboard-container">
         <h2>Dashboard</h2>
-        <button class="btn btn-luz-casa" id="toggleButton1">Luz da Casa</button>
-        <button class="btn btn-luz-rua" id="toggleButton2">Luz da Rua</button>
-        <button class="btn btn-luz-pasto" id="toggleButton3">Luz do Pasto</button>
-        <button class="btn btn-luz-geral" id="toggleButton4">Luz Geral</button>
+        <button class="btn btn-luz-casa" id="luz0">Luz da Casa</button>
+        <button class="btn btn-luz-rua" id="luz1">Luz da Rua</button>
+        <button class="btn btn-luz-pasto" id="luz2">Luz do Pasto</button>
+        <button class="btn btn-luz-geral" id="luz3">Luz Geral</button>
         <a href="/logout" class="btn btn-desligar">Logout</a>
     </div>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
-    function toggleButton(button, isOn) {
-        if (isOn) {
-            button.textContent = 'Desligar';
+    function updateButtonAppearance(button, isOn) {
+        if (!button.dataset.originalClass) {
             button.dataset.originalClass = button.className;
-            button.className = 'btn btn-desligar';
-        } else {
-            resetButton(button);
         }
-    }
-
-    function resetButton(button) {
-        const buttonNames = {
-            'toggleButton1': 'Luz da Casa',
-            'toggleButton2': 'Luz da Rua',
-            'toggleButton3': 'Luz do Pasto',
-            'toggleButton4': 'Luz Geral'
-        };
-        button.textContent = buttonNames[button.id];
-        button.className = button.dataset.originalClass || button.className;
-    }
-
-    function toggleAllButtons(isOn) {
-        document.querySelectorAll('.btn:not(.btn-desligar)').forEach(button => {
-            toggleButton(button, isOn);
-        });
+        button.textContent = isOn ? 'Desligar' : {
+            'luz0': 'Luz da Casa',
+            'luz1': 'Luz da Rua',
+            'luz2': 'Luz do Pasto',
+            'luz3': 'Luz Geral'
+        }[button.id];
+        button.className = isOn ? 'btn btn-desligar' : button.dataset.originalClass;
     }
 
     function updateButtonStates() {
         fetch('/luzes-estados')
             .then(response => response.json())
             .then(states => {
-                toggleButton(document.getElementById('toggleButton1'), states.luzCasaLigada);
-                toggleButton(document.getElementById('toggleButton2'), states.luzRuaLigada);
-                toggleButton(document.getElementById('toggleButton3'), states.luzPastoLigada);
-                toggleButton(document.getElementById('toggleButton4'), states.luzGeralLigada);
+                updateButtonAppearance(document.getElementById('luz0'), states.luzCasaLigada);
+                updateButtonAppearance(document.getElementById('luz1'), states.luzRuaLigada);
+                updateButtonAppearance(document.getElementById('luz2'), states.luzPastoLigada);
+                updateButtonAppearance(document.getElementById('luz3'), states.luzGeralLigada);
             })
-            .catch(err => console.error('Erro ao atualizar estados das luzes:', err));
+            .catch(err => console.error('Erro ao atualizar estados das luzes: ' + err));
     }
 
-    document.querySelectorAll('.btn').forEach(function(button) {
+    document.querySelectorAll('.btn').forEach(button => {
         button.addEventListener('click', function() {
-            const action = button.classList.contains('btn-desligar') ? 'desligar' : 'ligar';
-            const buttonId = button.id.replace('toggleButton', '');
+            const buttonId = button.id.replace('luz', '');
+            const action = button.textContent === 'Desligar' ? 'desligar' : 'ligar';
 
-            fetch('/toggle?action=' + action + '&id=' + buttonId)
-                .then(response => response.text())
+            fetch(`/toggle?action=${action}&id=${buttonId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao alternar luz, código de status: ' + response.status);
+                    return response.text();
+                })
                 .then(() => {
-                    if (buttonId === '4') {
-                        // Luz Geral foi alterada
-                        const isLuzGeralOn = (action === 'ligar');
-                        toggleAllButtons(isLuzGeralOn);
+                    if (buttonId === '3') {
+                        // Atualiza todos os botões se "Luz Geral" for alterada
+                        updateButtonStates();
                     } else {
-                        toggleButton(button, action === 'ligar');
+                        updateButtonAppearance(button, action === 'ligar');
                     }
                 })
-                .catch(err => console.error('Erro ao alternar luz:', err));
+                .catch(err => console.error('Erro ao alternar luz: ' + err));
         });
     });
 
-    updateButtonStates();
+    updateButtonStates(); // Inicializa os estados dos botões
 });
     </script>
 </body>
@@ -140,12 +143,17 @@ document.addEventListener('DOMContentLoaded', function() {
         request->send(200, "text/html", html);
     });
 
-    server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        String stateJson = "{\"luzCasaLigada\":" + String(luzEstado[0]) +
-                           ", \"luzRuaLigada\":" + String(luzEstado[1]) +
-                           ", \"luzPastoLigada\":" + String(luzEstado[2]) +
-                           ", \"luzGeralLigada\":" + String(pinoLuzGeral) + "}";
+    server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request) {
+        // Ler o estado dos arquivos de luzes e enviar como JSON
+        bool luzCasaLigada = readStateFromFile("/estadoLuzCasa.txt");
+        bool luzRuaLigada = readStateFromFile("/estadoLuzRua.txt");
+        bool luzPastoLigada = readStateFromFile("/estadoLuzPasto.txt");
+        bool luzGeralLigada = readStateFromFile("/estadoLuzGeral.txt"); // Lê o estado da Luz Geral
+
+        String stateJson = "{\"luzCasaLigada\":" + String(luzCasaLigada) +
+                           ", \"luzRuaLigada\":" + String(luzRuaLigada) +
+                           ", \"luzPastoLigada\":" + String(luzPastoLigada) +
+                           ", \"luzGeralLigada\":" + String(luzGeralLigada) + "}";
         request->send(200, "application/json", stateJson);
     });
 }

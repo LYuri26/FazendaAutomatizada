@@ -8,7 +8,6 @@
 // Declaração externa do servidor
 extern AsyncWebServer server;
 
-// Função para configurar as rotas do servidor web
 void setupWiFiGerenciamentoPage(AsyncWebServer &server) {
     server.on("/wifigerenciamento", HTTP_GET, [](AsyncWebServerRequest *request) {
         request->send(200, "text/html", getWiFiGerenciamentoPage());
@@ -73,7 +72,6 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server) {
             file.print(newContent);
             file.close();
 
-            // Conecta às redes salvas
             connectToSavedNetworks();
 
             request->redirect("/wifigerenciamento");

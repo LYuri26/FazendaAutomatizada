@@ -5,7 +5,6 @@
 #include "wifiinterface.h"
 #include "wifigerenciador.h"
 
-// Definições de Access Point
 const char *ap_ssid = "FazendaAutomatica";
 const char *ap_password = "12345678";
 IPAddress local_ip(192, 168, 26, 7);
@@ -19,22 +18,16 @@ bool isAPMode = false;
 bool connectionAttempted = false;
 
 void enterAPMode() {
-    Serial.println("Entrando no modo Access Point...");
-    WiFi.mode(WIFI_AP_STA); // Configura o ESP8266 para o modo dual (AP + Station)
+    WiFi.mode(WIFI_AP_STA);
     WiFi.softAPConfig(local_ip, gateway, subnet);
     WiFi.softAP(ap_ssid, ap_password);
-    Serial.print("IP AP: ");
-    Serial.println(WiFi.softAPIP());
+    
+    // Imprimir informações do modo AP no Serial Monitor
+    Serial.println("Modo AP ativado");
     Serial.print("SSID do AP: ");
     Serial.println(ap_ssid);
-
-    if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("Ainda conectado a uma rede.");
-    } else {
-        Serial.println("Não está conectado a uma rede, apenas em modo AP.");
-    }
-
-    isAPMode = true;
+    Serial.print("IP do AP: ");
+    Serial.println(WiFi.softAPIP());
 }
 
 bool connectToWiFi(const String& ssid, const String& password) {
@@ -45,24 +38,20 @@ bool connectToWiFi(const String& ssid, const String& password) {
         delay(500);
         attempts++;
     }
-    
-    // Verifica se a conexão foi bem-sucedida
+
     if (WiFi.status() == WL_CONNECTED) {
         Serial.print("Conectado à rede: ");
         Serial.println(ssid);
         Serial.print("IP Local: ");
         Serial.println(WiFi.localIP());
         return true;
-    } else {
-        Serial.println("Falha ao conectar à rede.");
-        return false;
     }
+    return false;
 }
 
 bool connectToSavedNetworks() {
     File file = LittleFS.open("/wifiredes.txt", "r");
     if (!file) {
-        Serial.println("Erro ao abrir o arquivo de redes Wi-Fi.");
         return false;
     }
 
@@ -84,15 +73,13 @@ bool connectToSavedNetworks() {
         }
         start = end + 1;
     }
-    Serial.println("Nenhuma rede salva foi conectada.");
     return false;
 }
 
 void loadSavedWiFiNetworks() {
     File file = LittleFS.open("/wifiredes.txt", "r");
     if (!file) {
-        Serial.println("Erro ao abrir o arquivo /wifiredes.txt.");
-        enterAPMode(); // Entra no modo AP se não conseguir carregar as redes
+        enterAPMode();
         return;
     }
 
@@ -100,16 +87,13 @@ void loadSavedWiFiNetworks() {
     bool connected = false;
     while (file.available()) {
         line = file.readStringUntil('\n');
-        line.trim(); // Remove espaços em branco no início e no final
+        line.trim();
         int commaIndex = line.indexOf(',');
         if (commaIndex != -1) {
             String savedSSID = line.substring(0, commaIndex);
             String savedPassword = line.substring(commaIndex + 1);
-            savedSSID.toCharArray(ssid, sizeof(ssid));          // SSID
-            savedPassword.toCharArray(password, sizeof(password)); // Senha
-
-            Serial.print("Tentando conectar à rede salva: SSID=");
-            Serial.println(ssid);
+            savedSSID.toCharArray(ssid, sizeof(ssid));
+            savedPassword.toCharArray(password, sizeof(password));
 
             if (!connectionAttempted) {
                 connectionAttempted = true;
@@ -118,16 +102,11 @@ void loadSavedWiFiNetworks() {
                     break;
                 }
             }
-        } else {
-            Serial.println("Formato inválido no arquivo de redes.");
         }
     }
     file.close();
 
     if (!connected) {
-        Serial.println("Não foi possível conectar a nenhuma rede salva. Entrando no modo AP.");
+        enterAPMode();
     }
-    
-    // Mantém o AP ativo mesmo se a conexão WiFi for estabelecida
-    enterAPMode();
 }
