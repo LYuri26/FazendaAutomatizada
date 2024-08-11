@@ -4,8 +4,6 @@
 #include "ligadesliga.h"
 #include "autenticador.h"
 
-extern bool luzEstado[4]; // Assume que luzEstado é uma variável global
-
 void setupDashboardPage(AsyncWebServer &server)
 {
     server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -73,8 +71,6 @@ void setupDashboardPage(AsyncWebServer &server)
     </div>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
-    let isLuzGeralOn = false;
-
     function toggleButton(button, isOn) {
         if (isOn) {
             button.textContent = 'Desligar';
@@ -110,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 toggleButton(document.getElementById('toggleButton2'), states.luzRuaLigada);
                 toggleButton(document.getElementById('toggleButton3'), states.luzPastoLigada);
                 toggleButton(document.getElementById('toggleButton4'), states.luzGeralLigada);
-                isLuzGeralOn = states.luzGeralLigada;
             })
             .catch(err => console.error('Erro ao atualizar estados das luzes:', err));
     }
@@ -118,17 +113,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn').forEach(function(button) {
         button.addEventListener('click', function() {
             const action = button.classList.contains('btn-desligar') ? 'desligar' : 'ligar';
-            const buttonId = button.id;
+            const buttonId = button.id.replace('toggleButton', '');
 
             fetch('/toggle?action=' + action + '&id=' + buttonId)
                 .then(response => response.text())
                 .then(() => {
-                    if (buttonId === 'toggleButton4') {
-                        isLuzGeralOn = (action === 'ligar');
+                    if (buttonId === '4') {
+                        // Luz Geral foi alterada
+                        const isLuzGeralOn = (action === 'ligar');
                         toggleAllButtons(isLuzGeralOn);
-                        if (!isLuzGeralOn) {
-                            updateButtonStates(); // Reseta todos os botões ao estado inicial se a luz geral for desligada
-                        }
                     } else {
                         toggleButton(button, action === 'ligar');
                     }
@@ -147,35 +140,12 @@ document.addEventListener('DOMContentLoaded', function() {
         request->send(200, "text/html", html);
     });
 
-    server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        String action = request->getParam("action")->value();
-        int id = request->getParam("id")->value().toInt();
-        bool isOn = (action == "ligar");
-
-        // Atualiza o estado das luzes
-        if (id == 3) { // Luz Geral
-            bool newState = !luzEstado[3]; // Inverte o estado da luz geral
-            for (int i = 0; i < 3; i++) {
-                luzEstado[i] = newState;
-                digitalWrite(i == 0 ? D4 : i == 1 ? D2 : D1, newState ? HIGH : LOW);
-            }
-            // Note: saveEstadoLuz is not used here as requested
-        } else {
-            luzEstado[id] = isOn;
-            digitalWrite(id == 0 ? D4 : id == 1 ? D2 : D1, isOn ? HIGH : LOW);
-            // Note: saveEstadoLuz is not used here as requested
-        }
-
-        request->send(200, "text/plain", "OK");
-    });
-
     server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         String stateJson = "{\"luzCasaLigada\":" + String(luzEstado[0]) +
                            ", \"luzRuaLigada\":" + String(luzEstado[1]) +
                            ", \"luzPastoLigada\":" + String(luzEstado[2]) +
-                           ", \"luzGeralLigada\":" + String(luzEstado[3]) + "}";
+                           ", \"luzGeralLigada\":" + String(pinoLuzGeral) + "}";
         request->send(200, "application/json", stateJson);
     });
 }

@@ -11,10 +11,10 @@ void setupLigaDesliga(AsyncWebServer &server);
 void handleToggleAction(AsyncWebServerRequest *request);
 
 
-extern bool luzCasaLigada;
-extern bool luzRuaLigada;
-extern bool luzPastoLigada;
-extern bool luzGeralLigada;
+extern const int pinoLuzCasa;
+extern const int pinoLuzRua;
+extern const int pinoLuzPasto;
+extern bool pinoLuzGeral;
 extern bool luzEstado[4];
 
 #endif // LIGADESLIGA_H
