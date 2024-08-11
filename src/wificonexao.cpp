@@ -18,11 +18,10 @@ bool isAPMode = false;
 bool connectionAttempted = false;
 
 void enterAPMode() {
-    WiFi.mode(WIFI_AP_STA);
+    WiFi.mode(WIFI_AP_STA); // Configura o módulo para operar em modo AP+STA
     WiFi.softAPConfig(local_ip, gateway, subnet);
     WiFi.softAP(ap_ssid, ap_password);
-    
-    // Imprimir informações do modo AP no Serial Monitor
+
     Serial.println("Modo AP ativado");
     Serial.print("SSID do AP: ");
     Serial.println(ap_ssid);
@@ -37,7 +36,9 @@ bool connectToWiFi(const String& ssid, const String& password) {
     while (WiFi.status() != WL_CONNECTED && attempts < maxAttempts) {
         delay(500);
         attempts++;
+        Serial.print(".");
     }
+    Serial.println(); // Pular linha após o loop de tentativa
 
     if (WiFi.status() == WL_CONNECTED) {
         Serial.print("Conectado à rede: ");
@@ -45,13 +46,16 @@ bool connectToWiFi(const String& ssid, const String& password) {
         Serial.print("IP Local: ");
         Serial.println(WiFi.localIP());
         return true;
+    } else {
+        Serial.println("Falha na conexão Wi-Fi");
+        return false;
     }
-    return false;
 }
 
 bool connectToSavedNetworks() {
     File file = LittleFS.open("/wifiredes.txt", "r");
     if (!file) {
+        Serial.println("Arquivo de redes Wi-Fi não encontrado");
         return false;
     }
 
@@ -79,6 +83,7 @@ bool connectToSavedNetworks() {
 void loadSavedWiFiNetworks() {
     File file = LittleFS.open("/wifiredes.txt", "r");
     if (!file) {
+        Serial.println("Arquivo de redes Wi-Fi não encontrado. Entrando no modo AP.");
         enterAPMode();
         return;
     }
@@ -107,6 +112,7 @@ void loadSavedWiFiNetworks() {
     file.close();
 
     if (!connected) {
+        Serial.println("Não foi possível conectar às redes salvas. Entrando no modo AP.");
         enterAPMode();
     }
 }

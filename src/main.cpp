@@ -24,12 +24,7 @@ void setup()
     Serial.begin(115200);
     setupLittleFS();
     loadSavedWiFiNetworks();
-
-    if (!connectionAttempted)
-    {
-        enterAPMode();
-    }
-
+    enterAPMode();
     setupServer();
 }
 
