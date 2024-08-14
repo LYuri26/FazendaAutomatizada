@@ -1,0 +1,9 @@
+ArduinoJson
+SPI
+Wire
+ESP Async WebServer
+ESP8266HTTPClient
+Adafruit BusIO
+LittleFS
+FS
+AsyncTCP
