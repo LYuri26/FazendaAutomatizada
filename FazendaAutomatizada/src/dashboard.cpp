@@ -4,26 +4,31 @@
 #include "ligadesliga.h"
 #include "autenticador.h"
 
-// Função para ler o estado da luz de um arquivo
-bool readStateFromFile(const char* path) {
-    if (!LittleFS.begin()) {
+bool readStateFromFile(const char *path)
+{
+    if (!LittleFS.begin())
+    {
         Serial.println("Falha ao montar o sistema de arquivos");
         return false;
     }
 
-    if (LittleFS.exists(path)) {
+    if (LittleFS.exists(path))
+    {
         File file = LittleFS.open(path, "r");
-        if (file) {
+        if (file)
+        {
             String content = file.readString();
             file.close();
-            return content.toInt() == 1;  // Assumindo que 1 representa ligado e 0 desligado
+            return content.toInt() == 1;
         }
     }
     return false;
 }
 
-void setupDashboardPage(AsyncWebServer &server) {
-    server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request) {
+void setupDashboardPage(AsyncWebServer &server)
+{
+    server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
         if (!isAuthenticated(request)) {
             redirectToAccessDenied(request);
             return;
@@ -123,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(() => {
                     if (buttonId === '3') {
-                        // Atualiza todos os botões se "Luz Geral" for alterada
+
                         updateButtonStates();
                     } else {
                         updateButtonAppearance(button, action === 'ligar');
@@ -133,27 +138,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    updateButtonStates(); // Inicializa os estados dos botões
+    updateButtonStates(); 
 });
     </script>
 </body>
 </html>
         )rawliteral";
 
-        request->send(200, "text/html", html);
-    });
+        request->send(200, "text/html", html); });
 
-    server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request) {
-        // Ler o estado dos arquivos de luzes e enviar como JSON
+    server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+
         bool luzCasaLigada = readStateFromFile("/estadoLuzCasa.txt");
         bool luzRuaLigada = readStateFromFile("/estadoLuzRua.txt");
         bool luzPastoLigada = readStateFromFile("/estadoLuzPasto.txt");
-        bool luzGeralLigada = readStateFromFile("/estadoLuzGeral.txt"); // Lê o estado da Luz Geral
+        bool luzGeralLigada = readStateFromFile("/estadoLuzGeral.txt"); 
 
         String stateJson = "{\"luzCasaLigada\":" + String(luzCasaLigada) +
                            ", \"luzRuaLigada\":" + String(luzRuaLigada) +
                            ", \"luzPastoLigada\":" + String(luzPastoLigada) +
                            ", \"luzGeralLigada\":" + String(luzGeralLigada) + "}";
-        request->send(200, "application/json", stateJson);
-    });
+        request->send(200, "application/json", stateJson); });
 }

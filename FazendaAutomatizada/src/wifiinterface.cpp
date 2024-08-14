@@ -1,7 +1,6 @@
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 
-
 const char *getWiFiGerenciamentoPage()
 {
     return R"rawliteral(
@@ -16,37 +15,39 @@ const char *getWiFiGerenciamentoPage()
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f0f0f0;
+            background-color: #f9f9f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
         .container {
-            max-width: 360px;
-            margin: auto;
-            padding: 15px;
+            max-width: 320px;
+            padding: 20px;
             background: #fff;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
         }
         h2 {
-            text-align: center;
             font-size: 1.2em;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            color: #333;
         }
         input[type="text"], input[type="password"], button {
             width: 100%;
-            padding: 8px;
-            margin: 10px 0;
+            padding: 10px;
+            margin: 8px 0;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
         }
         button {
-            background-color: #28a745;
+            background-color: #007bff;
             color: #fff;
             cursor: pointer;
             border: none;
-        }
-        .btn-back {
-            background-color: #007bff;
+            font-size: 1em;
         }
         .btn-delete {
             color: #dc3545;
@@ -56,6 +57,10 @@ const char *getWiFiGerenciamentoPage()
         #saved-networks, #device-ip {
             margin-top: 15px;
             font-size: 0.9em;
+            color: #555;
+        }
+        #toggle-password {
+            background-color: #6c757d;
         }
     </style>
 </head>
@@ -64,13 +69,11 @@ const char *getWiFiGerenciamentoPage()
         <h2>Gerenciamento de Redes Wi-Fi</h2>
         <div id="message"></div>
         <form id="save-form" action="/salvarwifi" method="post">
-            <label for="ssid">SSID:</label>
-            <input type="text" id="ssid" name="ssid" required>
-            <label for="password">Senha:</label>
-            <input type="password" id="password" name="password" required>
+            <input type="text" id="ssid" name="ssid" placeholder="SSID" required>
+            <input type="password" id="password" name="password" placeholder="Senha" required>
             <button type="button" id="toggle-password">Mostrar</button>
-            <button type="submit" class="btn-submit">Salvar</button>
-            <button type="button" onclick="window.history.back()" class="btn-back">Voltar</button>
+            <button type="submit">Salvar</button>
+            <button type="button" onclick="window.history.back()">Voltar</button>
         </form>
         <div id="saved-networks">Aguardando redes salvas...</div>
         <div id="device-ip">Aguardando IP...</div>
