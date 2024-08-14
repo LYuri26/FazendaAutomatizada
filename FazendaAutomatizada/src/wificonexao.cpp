@@ -24,42 +24,26 @@ void enterAPMode()
     WiFi.softAP(ap_ssid, ap_password);
 
     Serial.println("Modo AP ativado");
-    Serial.print("SSID do AP: ");
-    Serial.println(ap_ssid);
-    Serial.print("IP do AP: ");
-    Serial.println(WiFi.softAPIP());
+    Serial.printf("SSID do AP: %s\nIP do AP: %s\n", ap_ssid, WiFi.softAPIP().toString().c_str());
 }
 
 bool connectToWiFi(const String &ssid, const String &password)
 {
-    Serial.print("Tentando conectar à rede: ");
-    Serial.print(ssid);
-    Serial.println("...");
+    Serial.printf("Tentando conectar à rede: %s...\n", ssid.c_str());
 
     WiFi.begin(ssid.c_str(), password.c_str());
-    int attempts = 0;
-    const int maxAttempts = 20;
-    while (WiFi.status() != WL_CONNECTED && attempts < maxAttempts)
+    for (int attempts = 0; attempts < 20; ++attempts)
     {
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            Serial.printf("Conectado à rede: %s\nIP Local: %s\n", ssid.c_str(), WiFi.localIP().toString().c_str());
+            return true;
+        }
         delay(500);
         Serial.print(".");
-        attempts++;
     }
-    Serial.println();
-
-    if (WiFi.status() == WL_CONNECTED)
-    {
-        Serial.print("Conectado à rede: ");
-        Serial.println(ssid);
-        Serial.print("IP Local: ");
-        Serial.println(WiFi.localIP());
-        return true;
-    }
-    else
-    {
-        Serial.println("Falha na conexão Wi-Fi");
-        return false;
-    }
+    Serial.println("\nFalha na conexão Wi-Fi");
+    return false;
 }
 
 bool connectToSavedNetworks()
@@ -73,26 +57,20 @@ bool connectToSavedNetworks()
         return false;
     }
 
-    String content = file.readString();
-    file.close();
-
-    unsigned int start = 0;
-    while (start < content.length())
+    while (file.available())
     {
-        int end = content.indexOf('\n', start);
-        if (end == -1)
-            end = content.length();
-        String line = content.substring(start, end);
+        String line = file.readStringUntil('\n');
+        line.trim();
         int commaIndex = line.indexOf(',');
         if (commaIndex != -1)
         {
             String savedSSID = line.substring(0, commaIndex);
             String savedPassword = line.substring(commaIndex + 1);
-            Serial.print("Tentando conectar à rede salva: ");
-            Serial.println(savedSSID);
+            Serial.printf("Tentando conectar à rede salva: %s\n", savedSSID.c_str());
             if (connectToWiFi(savedSSID, savedPassword))
             {
                 Serial.println("Conexão bem-sucedida com uma das redes salvas.");
+                file.close();
                 return true;
             }
             else
@@ -100,9 +78,10 @@ bool connectToSavedNetworks()
                 Serial.println("Falha ao conectar na rede salva.");
             }
         }
-        start = end + 1;
     }
+
     Serial.println("Não foi possível conectar a nenhuma rede salva.");
+    file.close();
     return false;
 }
 
@@ -110,51 +89,14 @@ void loadSavedWiFiNetworks()
 {
     Serial.println("Carregando redes Wi-Fi salvas...");
 
-    File file = LittleFS.open("/wifiredes.txt", "r");
-    if (!file)
+    if (!LittleFS.exists("/wifiredes.txt"))
     {
         Serial.println("Arquivo de redes Wi-Fi não encontrado. Entrando no modo AP.");
         enterAPMode();
         return;
     }
 
-    String line;
-    bool connected = false;
-    while (file.available())
-    {
-        line = file.readStringUntil('\n');
-        line.trim();
-        int commaIndex = line.indexOf(',');
-        if (commaIndex != -1)
-        {
-            String savedSSID = line.substring(0, commaIndex);
-            String savedPassword = line.substring(commaIndex + 1);
-            savedSSID.toCharArray(ssid, sizeof(ssid));
-            savedPassword.toCharArray(password, sizeof(password));
-
-            Serial.print("Carregando rede salva: ");
-            Serial.println(savedSSID);
-
-            if (!connectionAttempted)
-            {
-                connectionAttempted = true;
-                Serial.println("Tentando conectar com a primeira rede salva...");
-                if (connectToWiFi(savedSSID, savedPassword))
-                {
-                    connected = true;
-                    Serial.println("Conectado com sucesso à rede salva.");
-                    break;
-                }
-                else
-                {
-                    Serial.println("Falha na conexão com a rede salva.");
-                }
-            }
-        }
-    }
-    file.close();
-
-    if (!connected)
+    if (!connectToSavedNetworks())
     {
         Serial.println("Não foi possível conectar às redes salvas. Entrando no modo AP.");
         enterAPMode();
