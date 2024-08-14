@@ -39,7 +39,21 @@ void initLittleFS()
 {
     if (!LittleFS.begin())
     {
+        Serial.println("Falha ao iniciar LittleFS.");
         return;
+    }
+
+    // Cria arquivos de estado padrão se não existirem
+    for (int i = 0; i < 4; i++) {
+        if (!LittleFS.exists(arquivoEstadoLuz[i])) {
+            File file = LittleFS.open(arquivoEstadoLuz[i], "w");
+            if (file) {
+                file.println("0"); // Estado padrão "desligado"
+                file.close();
+            } else {
+                Serial.printf("Falha ao criar o arquivo: %s\n", arquivoEstadoLuz[i].c_str());
+            }
+        }
     }
 }
 
@@ -48,6 +62,7 @@ bool readEstadoLuz(int index)
     File file = LittleFS.open(arquivoEstadoLuz[index], "r");
     if (!file)
     {
+        Serial.printf("Falha ao abrir o arquivo: %s\n", arquivoEstadoLuz[index].c_str());
         return false;
     }
 
@@ -61,6 +76,7 @@ void saveEstadoLuz(int index, bool state)
     File file = LittleFS.open(arquivoEstadoLuz[index], "w");
     if (!file)
     {
+        Serial.printf("Falha ao abrir o arquivo para escrita: %s\n", arquivoEstadoLuz[index].c_str());
         return;
     }
 

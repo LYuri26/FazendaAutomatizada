@@ -14,6 +14,11 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server) {
     });
 
     server.on("/listadewifi", HTTP_GET, [](AsyncWebServerRequest *request) {
+        if (!LittleFS.exists("/wifiredes.txt")) {
+            request->send(404, "text/plain", "Arquivo de redes Wi-Fi não encontrado.");
+            return;
+        }
+
         File file = LittleFS.open("/wifiredes.txt", "r");
         if (!file) {
             request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
@@ -29,6 +34,16 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server) {
         if (request->hasParam("ssid", true) && request->hasParam("password", true)) {
             String ssid = request->getParam("ssid", true)->value();
             String password = request->getParam("password", true)->value();
+
+            // Verifica se o arquivo existe, se não existir cria um novo arquivo
+            if (!LittleFS.exists("/wifiredes.txt")) {
+                File file = LittleFS.open("/wifiredes.txt", "w");
+                if (!file) {
+                    request->send(500, "text/plain", "Erro ao criar o arquivo de redes Wi-Fi");
+                    return;
+                }
+                file.close();
+            }
 
             File file = LittleFS.open("/wifiredes.txt", "r");
             if (!file) {
@@ -83,6 +98,16 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server) {
     server.on("/excluirwifi", HTTP_GET, [](AsyncWebServerRequest *request) {
         if (request->hasParam("ssid")) {
             String ssidToDelete = request->getParam("ssid")->value();
+
+            // Verifica se o arquivo existe, se não existir cria um novo arquivo
+            if (!LittleFS.exists("/wifiredes.txt")) {
+                File file = LittleFS.open("/wifiredes.txt", "w");
+                if (!file) {
+                    request->send(500, "text/plain", "Erro ao criar o arquivo de redes Wi-Fi");
+                    return;
+                }
+                file.close();
+            }
 
             File file = LittleFS.open("/wifiredes.txt", "r");
             if (!file) {
