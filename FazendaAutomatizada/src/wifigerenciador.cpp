@@ -1,4 +1,4 @@
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include "wificonexao.h"
@@ -83,7 +83,7 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
             file.print(newContent);
             file.close();
 
-            connectToSavedNetworks();
+            connectToSavedNetworks();  // Implementar a função connectToSavedNetworks para ESP32
             request->redirect("/wifigerenciamento");
         } else {
             request->send(400, "text/plain", "Dados ausentes.");

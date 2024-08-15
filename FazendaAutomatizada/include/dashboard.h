@@ -3,7 +3,10 @@
 
 #include <ESPAsyncWebServer.h>
 
-void handleToggleAction(AsyncWebServer& server);
+// Função para lidar com a ação de alternar o estado das luzes
+void handleToggleAction(AsyncWebServer &server);
+
+// Função para configurar a página do dashboard
 void setupDashboardPage(AsyncWebServer &server);
 
-#endif
+#endif // DASHBOARD_H

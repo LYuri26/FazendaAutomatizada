@@ -1,4 +1,6 @@
+#include <WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <LittleFS.h>
 
 String generateErrorPage(const String &title, const String &message, const String &linkText, const String &linkHref)
 {

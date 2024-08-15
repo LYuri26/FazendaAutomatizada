@@ -1,4 +1,4 @@
-#include <ESP8266WiFi.h>
+#include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 

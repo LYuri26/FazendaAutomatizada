@@ -1,18 +1,18 @@
-#include <FS.h>
-#include <LittleFS.h>
+#include <WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <LittleFS.h>
 #include "autenticador.h"
 #include "ligadesliga.h"
 
 void toggleLuz(int index, String action, AsyncWebServerRequest *request);
 
-const int pinoLuzCasa = D4;
-const int pinoLuzRua = D2;
-const int pinoLuzPasto = D1;
+const int pinoLuzCasa = 16; // GPIO16 no ESP32
+const int pinoLuzRua = 4;   // GPIO4 no ESP32
+const int pinoLuzPasto = 5; // GPIO5 no ESP32
 
 const String arquivoEstadoLuz[] = {"/estadoLuzCasa.txt", "/estadoLuzRua.txt", "/estadoLuzPasto.txt", "/estadoLuzGeral.txt"};
 bool luzEstado[] = {false, false, false};
-bool pinoLuzGeral = false;
+bool pinoLuzGeral = false; // Corrigido para variável boolean
 
 void handleToggleAction(AsyncWebServer &server)
 {

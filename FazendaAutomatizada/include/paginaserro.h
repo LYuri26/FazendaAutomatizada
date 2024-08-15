@@ -3,6 +3,10 @@
 
 #include <ESPAsyncWebServer.h>
 
-void setupErrorPages(AsyncWebServer& server);
+// Função para configurar as páginas de erro
+void setupErrorPages(AsyncWebServer &server);
+
+// Função para redirecionar para a página de acesso negado
 void redirectToAccessDenied(AsyncWebServerRequest *request);
-#endif
+
+#endif // PAGINASERRO_H

@@ -1,7 +1,9 @@
 #include <ESPAsyncWebServer.h>
 
-void setupIndexPage(AsyncWebServer& server) {
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+void setupIndexPage(AsyncWebServer &server)
+{
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
         String html = R"rawliteral(
             <!DOCTYPE html>
             <html lang="pt-br">
@@ -94,6 +96,5 @@ void setupIndexPage(AsyncWebServer& server) {
         }
 
         html.replace("%ERROR_MESSAGE%", errorMessage);
-        request->send(200, "text/html", html);
-    });
+        request->send(200, "text/html", html); });
 }

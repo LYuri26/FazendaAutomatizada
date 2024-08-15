@@ -1,10 +1,12 @@
-#include "autenticador.h"
 #include <ESPAsyncWebServer.h>
+#include <LittleFS.h>
 
+// Variáveis de sessão
 String sessionId = "";
 unsigned long sessionStartTime = 0;
-const unsigned long sessionTimeout = 5 * 60 * 1000;
+const unsigned long sessionTimeout = 5 * 60 * 1000; // 5 minutos
 
+// Função para verificar a autenticação do usuário
 bool isAuthenticated(AsyncWebServerRequest *request)
 {
     if (request->hasHeader("Cookie"))
@@ -44,6 +46,7 @@ bool isAuthenticated(AsyncWebServerRequest *request)
     return false;
 }
 
+// Função para lidar com o login
 void handleLogin(AsyncWebServerRequest *request)
 {
     if (request->hasParam("username", true) && request->hasParam("password", true))
@@ -59,7 +62,7 @@ void handleLogin(AsyncWebServerRequest *request)
             sessionId = String(millis(), HEX);
             sessionStartTime = millis();
             Serial.println("Login bem-sucedido.");
-            AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "");
+            AsyncWebServerResponse *response = request->beginResponse(302, "text/html", "");
             response->addHeader("Set-Cookie", "session_id=" + sessionId + "; Path=/; HttpOnly");
             response->addHeader("Location", "/dashboard");
             request->send(response);
@@ -77,13 +80,14 @@ void handleLogin(AsyncWebServerRequest *request)
     }
 }
 
+// Função para lidar com o logout
 void handleLogout(AsyncWebServerRequest *request)
 {
     if (isAuthenticated(request))
     {
         Serial.println("Logout bem-sucedido.");
         sessionId = "";
-        AsyncWebServerResponse *response = request->beginResponse(302, "text/plain", "");
+        AsyncWebServerResponse *response = request->beginResponse(302, "text/html", "");
         response->addHeader("Set-Cookie", "session_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly");
         response->addHeader("Location", "/");
         request->send(response);
@@ -95,12 +99,13 @@ void handleLogout(AsyncWebServerRequest *request)
     }
 }
 
+// Função para lidar com o acesso ao Dashboard
 void handleDashboard(AsyncWebServerRequest *request)
 {
     if (isAuthenticated(request))
     {
         Serial.println("Acesso ao Dashboard concedido.");
-        request->send(200, "text/plain", "Bem-vindo ao Dashboard!");
+        request->send(200, "text/html", "Bem-vindo ao Dashboard!");
     }
     else
     {

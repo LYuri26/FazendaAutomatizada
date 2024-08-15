@@ -128,7 +128,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(() => {
                     if (buttonId === '3') {
-
                         updateButtonStates();
                     } else {
                         updateButtonAppearance(button, action === 'ligar');
@@ -149,7 +148,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-
         bool luzCasaLigada = readStateFromFile("/estadoLuzCasa.txt");
         bool luzRuaLigada = readStateFromFile("/estadoLuzRua.txt");
         bool luzPastoLigada = readStateFromFile("/estadoLuzPasto.txt");

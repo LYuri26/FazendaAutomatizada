@@ -1,7 +1,8 @@
-#include "creditos.h"
 #include <ESPAsyncWebServer.h>
+#include <LittleFS.h>
 
-void setupCreditosPage(AsyncWebServer& server) {
+void setupCreditosPage(AsyncWebServer &server)
+{
     String creditsHtml = R"rawliteral(
         <!DOCTYPE html>
         <html lang="pt-br">
@@ -77,7 +78,6 @@ void setupCreditosPage(AsyncWebServer& server) {
         </html>
     )rawliteral";
 
-    server.on("/creditos", HTTP_GET, [creditsHtml](AsyncWebServerRequest *request) {
-        request->send(200, "text/html", creditsHtml);
-    });
+    server.on("/creditos", HTTP_GET, [creditsHtml](AsyncWebServerRequest *request)
+              { request->send(200, "text/html", creditsHtml); });
 }
