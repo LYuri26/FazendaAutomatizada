@@ -83,7 +83,7 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
             file.print(newContent);
             file.close();
 
-            connectToSavedNetworks();  // Implementar a função connectToSavedNetworks para ESP32
+            connectToSavedNetworks();
             request->redirect("/wifigerenciamento");
         } else {
             request->send(400, "text/plain", "Dados ausentes.");

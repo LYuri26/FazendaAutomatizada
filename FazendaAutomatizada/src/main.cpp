@@ -1,6 +1,8 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
+#include <WiFiUdp.h>
+#include <NTPClient.h>
 
 #include "index.h"
 #include "autenticador.h"
@@ -11,13 +13,22 @@
 #include "paginaserro.h"
 #include "wifigerenciador.h"
 #include "wifiinterface.h"
+#include "localizacaogerenciador.h"
 
 AsyncWebServer server(80);
+
+const long utcOffsetInSeconds = -10800;
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
 void setupLittleFS();
 void setupServer();
 bool isAuthenticated(AsyncWebServerRequest *request);
 void redirectToAccessDenied(AsyncWebServerRequest *request);
+void syncTime();
+
+unsigned long lastUpdate = 0;
+const unsigned long updateInterval = 18000000; // 5 horas em milissegundos
 
 void setup()
 {
@@ -26,6 +37,7 @@ void setup()
     loadSavedWiFiNetworks();
     enterAPMode();
     setupServer();
+    syncTime();
 }
 
 void loop()
@@ -65,6 +77,13 @@ void loop()
         }
     }
 
+    if (currentTime - lastUpdate >= updateInterval)
+    {
+        updateSunriseSunsetTimes();
+        lastUpdate = currentTime;
+    }
+
+    timeClient.update();
     delay(1000);
 }
 
@@ -99,6 +118,9 @@ void setupServer()
     server.on("/check-auth", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(200, "application/json", "{\"authenticated\":" + String(isAuthenticated(request) ? "true" : "false") + "}"); });
 
+    server.on("/localizacao", HTTP_GET, [](AsyncWebServerRequest *request)
+              { isAuthenticated(request) ? setupLocalizacaoPage(server) : redirectToAccessDenied(request); });
+
     server.onNotFound([](AsyncWebServerRequest *request)
                       { request->send(404, "text/plain", "Not found"); });
 
@@ -108,4 +130,10 @@ void setupServer()
 void redirectToAccessDenied(AsyncWebServerRequest *request)
 {
     request->redirect("/acesso-invalido");
+}
+
+void syncTime()
+{
+    timeClient.begin();
+    timeClient.update();
 }
