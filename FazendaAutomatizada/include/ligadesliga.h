@@ -13,9 +13,9 @@ extern const int pinoLuzCasa;
 extern const int pinoLuzRua;
 extern const int pinoLuzPasto;
 extern bool pinoLuzGeral;
-extern bool luzEstado[3]; // Corrigido para 3 luzes
+extern bool luzEstado[3]; 
 
-// Função para salvar o estado da luz
+
 void saveEstadoLuz(int index, bool state);
 
 #endif

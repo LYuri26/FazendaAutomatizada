@@ -3,8 +3,8 @@
 
 #include <ESPAsyncWebServer.h>
 
-// Declaração da função
+
 void updateSunriseSunsetTimes();
 void setupLocalizacaoPage(AsyncWebServer &server);
 
-#endif // LOCALIZACAOGERENCIADOR_H
+#endif 
