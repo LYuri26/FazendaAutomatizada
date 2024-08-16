@@ -14,28 +14,42 @@
 
 AsyncWebServer server(80);
 
+const unsigned long UPDATE_INTERVAL = 300000; // Intervalo para atualizar o tempo e status dos motores (em milissegundos).
+unsigned long lastUpdate = 0;                 // Armazena o timestamp da última atualização de tempo.
+
 void setupLittleFS();
 void setupServer();
+void updateTime();      // Declara a função para atualizar o tempo.
+void setupTimeClient(); // Declara a função
 bool isAuthenticated(AsyncWebServerRequest *request);
 void redirectToAccessDenied(AsyncWebServerRequest *request);
 
 void setup()
 {
     Serial.begin(115200);
-    setupLittleFS();
-    loadSavedWiFiNetworks();
-    enterAPMode();
-    setupServer();
+    setupLittleFS();         // Inicializa o LittleFS
+    loadSavedWiFiNetworks(); // Carrega redes Wi-Fi salvas
+    enterAPMode();           // Configura o modo Access Point
+    setupServer();           // Configura o servidor web
+    setupTimeClient();       // Configura o cliente de tempo para sincronizar o tempo
 }
 
 void loop()
 {
-    static unsigned long lastCheckTime = 0;
-    unsigned long currentTime = millis();
+    unsigned long currentMillis = millis(); // Obtém o tempo atual em milissegundos desde o boot.
 
-    if (currentTime - lastCheckTime > 600000)
+    // Atualiza o tempo periodicamente
+    if (currentMillis - lastUpdate >= UPDATE_INTERVAL) // Verifica se o intervalo de atualização foi atingido
     {
-        lastCheckTime = currentTime;
+        updateTime();               // Chama a função para atualizar o tempo
+        lastUpdate = currentMillis; // Atualiza o timestamp da última atualização
+    }
+
+    // Verifica a conexão Wi-Fi periodicamente
+    static unsigned long lastCheckTime = 0;
+    if (currentMillis - lastCheckTime >= 600000) // Verifica se o intervalo de checagem foi atingido
+    {
+        lastCheckTime = currentMillis;
 
         if (isAPMode)
         {
@@ -72,9 +86,22 @@ void setupLittleFS()
 {
     if (!LittleFS.begin())
     {
-        while (true)
+        Serial.println("Falha ao inicializar o LittleFS. Tentando formatar...");
+        if (!LittleFS.format())
         {
-            delay(1000);
+            Serial.println("Falha ao formatar o LittleFS.");
+            while (true)
+            {
+                delay(1000);
+            }
+        }
+        if (!LittleFS.begin())
+        {
+            Serial.println("Falha ao inicializar o LittleFS após formatação.");
+            while (true)
+            {
+                delay(1000);
+            }
         }
     }
 }

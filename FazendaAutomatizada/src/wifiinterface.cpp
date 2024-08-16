@@ -1,11 +1,3 @@
-#include <ESPAsyncWebServer.h>
-#include <LittleFS.h>
-#include <WiFi.h>
-
-// Definição do servidor web
-extern AsyncWebServer server;
-
-// Função que retorna a página de gerenciamento Wi-Fi
 const char *getWiFiGerenciamentoPage()
 {
     return R"rawliteral(
@@ -18,7 +10,7 @@ const char *getWiFiGerenciamentoPage()
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
+            background-color: #f0f0f0;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -26,31 +18,35 @@ const char *getWiFiGerenciamentoPage()
             margin: 0;
         }
         .container {
-            max-width: 300px;
-            padding: 15px;
-            background: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            max-width: 350px;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
         h2 {
-            margin-bottom: 15px;
-            font-size: 1.1em;
-            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            color: #444;
         }
         input, button {
-            width: 100%;
-            padding: 8px;
-            margin: 6px 0;
+            width: calc(100% - 16px);
+            padding: 10px;
+            margin: 8px 0;
             border: 1px solid #ddd;
-            border-radius: 3px;
+            border-radius: 4px;
             box-sizing: border-box;
         }
         button {
-            background-color: #007bff;
-            color: #fff;
+            background-color: #28a745;
+            color: #ffffff;
             border: none;
             cursor: pointer;
+            font-size: 1em;
+        }
+        button:hover {
+            background-color: #218838;
         }
         .btn-delete {
             color: #dc3545;
@@ -59,10 +55,25 @@ const char *getWiFiGerenciamentoPage()
             margin-top: 5px;
             text-decoration: none;
         }
-        #saved-networks, #device-ip {
-            margin-top: 10px;
+        .btn-back {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .btn-back:hover {
+            background-color: #0056b3;
+        }
+        #saved-networks, #device-ip, #file-contents {
+            margin-top: 15px;
             font-size: 0.9em;
             color: #555;
+        }
+        #message {
+            color: #dc3545;
+            font-size: 1em;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -76,13 +87,16 @@ const char *getWiFiGerenciamentoPage()
             <button type="button" id="toggle-password">Mostrar</button>
             <button type="submit">Salvar</button>
         </form>
+        <button class="btn-back" onclick="window.history.back()">Voltar</button>
         <div id="saved-networks">Aguardando redes salvas...</div>
         <div id="device-ip">Aguardando IP...</div>
+        <div id="file-contents">Aguardando conteúdo do arquivo...</div>
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             fetchSavedNetworks();
-            fetchDeviceIP();
+            updateDeviceIP();
+            fetchFileContents();
 
             document.getElementById('toggle-password').addEventListener('click', function() {
                 const passwordField = document.getElementById('password');
@@ -101,7 +115,8 @@ const char *getWiFiGerenciamentoPage()
                     document.getElementById('message').textContent = 'Rede conectada com sucesso!';
                     this.reset();
                     fetchSavedNetworks();
-                    fetchDeviceIP();
+                    updateDeviceIP();
+                    fetchFileContents();
                 })
                 .catch(() => {
                     document.getElementById('message').textContent = 'Erro ao conectar na rede';
@@ -125,7 +140,7 @@ const char *getWiFiGerenciamentoPage()
                 });
         }
 
-        function fetchDeviceIP() {
+        function updateDeviceIP() {
             fetch('/getip')
                 .then(response => response.text())
                 .then(ip => {
@@ -135,6 +150,26 @@ const char *getWiFiGerenciamentoPage()
                     document.getElementById('device-ip').innerHTML = '<p>Erro ao buscar IP do dispositivo.</p>';
                 });
         }
+
+        function fetchFileContents() {
+            fetch('/filecontents')
+                .then(response => response.text())
+                .then(content => {
+                    const fileContents = document.getElementById('file-contents');
+                    fileContents.innerHTML = content.trim() ? 
+                        content.trim().split('\n').map(line => {
+                            const [ssid] = line.split(',');
+                            return `<p>SSID: ${ssid}</p>`;
+                        }).join('') : '<p>Arquivo vazio.</p>';
+                })
+                .catch(() => {
+                    document.getElementById('file-contents').innerHTML = '<p>Erro ao buscar conteúdo do arquivo.</p>';
+                });
+        }
+
+        // Atualiza o IP e o conteúdo do arquivo a cada 10 segundos
+        setInterval(updateDeviceIP, 10000);
+        setInterval(fetchFileContents, 10000);
     </script>
 </body>
 </html>

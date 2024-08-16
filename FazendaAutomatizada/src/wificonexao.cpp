@@ -17,6 +17,42 @@ char password[32] = "";
 bool isAPMode = false;
 bool connectionAttempted = false;
 
+void formatLittleFS()
+{
+    if (LittleFS.begin())
+    {
+        Serial.println("Formatando LittleFS...");
+        if (LittleFS.format())
+        {
+            Serial.println("Formatação concluída.");
+        }
+        else
+        {
+            Serial.println("Falha ao formatar LittleFS.");
+        }
+        LittleFS.end();
+    }
+    else
+    {
+        Serial.println("LittleFS não iniciado.");
+    }
+}
+
+bool initializeLittleFS()
+{
+    if (!LittleFS.begin())
+    {
+        Serial.println("Falha ao inicializar LittleFS. Tentando formatar...");
+        formatLittleFS();
+        if (!LittleFS.begin())
+        {
+            Serial.println("Falha ao inicializar LittleFS após formatação.");
+            return false;
+        }
+    }
+    return true;
+}
+
 void enterAPMode()
 {
     WiFi.mode(WIFI_AP_STA);
@@ -49,6 +85,12 @@ bool connectToWiFi(const String &ssid, const String &password)
 bool connectToSavedNetworks()
 {
     Serial.println("Tentando conectar às redes Wi-Fi salvas...");
+
+    if (!initializeLittleFS())
+    {
+        Serial.println("Não foi possível inicializar o LittleFS.");
+        return false;
+    }
 
     File file = LittleFS.open("/wifiredes.txt", "r");
     if (!file)
@@ -88,6 +130,13 @@ bool connectToSavedNetworks()
 void loadSavedWiFiNetworks()
 {
     Serial.println("Carregando redes Wi-Fi salvas...");
+
+    if (!initializeLittleFS())
+    {
+        Serial.println("Não foi possível inicializar o LittleFS. Entrando no modo AP.");
+        enterAPMode();
+        return;
+    }
 
     if (!LittleFS.exists("/wifiredes.txt"))
     {
