@@ -42,12 +42,6 @@ void setupDashboardPage(AsyncWebServer &server)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: Arial, sans-serif;
             background-color: #f8f9fa;
@@ -57,112 +51,94 @@ void setupDashboardPage(AsyncWebServer &server)
             height: 100vh;
             margin: 0;
         }
-
         .dashboard-container {
-            background-color: #ffffff;
+            background-color: #fff;
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
             text-align: center;
             width: 90%;
-            max-width: 320px;
+            max-width: 300px;
         }
-
-        h2 {
-            margin-bottom: 20px;
-            font-size: 24px;
-            color: #333333;
-        }
-
         .btn {
             display: block;
-            padding: 12px;
+            padding: 10px;
             margin: 10px auto;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             width: 100%;
-            max-width: 220px;
-            color: #ffffff;
-            transition: background-color 0.3s, transform 0.2s;
+            max-width: 180px;
+            color: #fff;
         }
-
-        .btn:hover {
-            transform: scale(1.05);
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-        }
-
-        .btn-luz-sala { background-color: #28a745; }
-        .btn-luz-externa { background-color: #007bff; }
-        .btn-luz-galpao { background-color: #ffc107; }
-        .btn-luz-entrada { background-color: #ff5733; }
-        .btn-definir-localizacao { background-color: #6f42c1; }
-        .btn-logout { background-color: #dc3545; }
-
-        .btn-luz-sala:hover { background-color: #218838; }
-        .btn-luz-externa:hover { background-color: #0069d9; }
-        .btn-luz-galpao:hover { background-color: #e0a800; }
-        .btn-luz-entrada:hover { background-color: #e74c3c; }
-        .btn-definir-localizacao:hover { background-color: #5e35b1; }
-        .btn-logout:hover { background-color: #c82333; }
+        .btn-luz-casa { background-color: #28a745; }
+        .btn-luz-rua { background-color: #007bff; }
+        .btn-luz-pasto { background-color: #ffc107; }
+        .btn-luz-geral { background-color: #6c757d; }
+        .btn-desligar { background-color: #dc3545; }
     </style>
 </head>
 <body>
     <div class="dashboard-container">
         <h2>Dashboard</h2>
-        <button class="btn btn-luz-sala" id="luzSala">Luz da Sala</button>
-        <button class="btn btn-luz-externa" id="luzExterna">Luz Externa</button>
-        <button class="btn btn-luz-galpao" id="luzGalpao">Luz do Galpão</button>
-        <button class="btn btn-luz-entrada" id="luzEntrada">Luz da Entrada</button>
-        <a href="/localizacao" class="btn btn-definir-localizacao">Definir Localização</a>
-        <a href="/logout" class="btn btn-logout">Logout</a>
+        <button class="btn btn-luz-casa" id="luz0">Luz da Casa</button>
+        <button class="btn btn-luz-rua" id="luz1">Luz da Rua</button>
+        <button class="btn btn-luz-pasto" id="luz2">Luz do Pasto</button>
+        <button class="btn btn-luz-geral" id="luz3">Luz Geral</button>
+        <a href="/logout" class="btn btn-desligar">Logout</a>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            function updateButtonAppearance(button, isOn) {
-                if (!button.dataset.originalClass) {
-                    button.dataset.originalClass = button.className;
-                }
-                button.textContent = isOn ? 'Desligar' : button.dataset.originalText;
-                button.className = isOn ? 'btn btn-logout' : button.dataset.originalClass;
-            }
+document.addEventListener('DOMContentLoaded', function() {
+    function updateButtonAppearance(button, isOn) {
+        if (!button.dataset.originalClass) {
+            button.dataset.originalClass = button.className;
+        }
+        button.textContent = isOn ? 'Desligar' : {
+            'luz0': 'Luz da Casa',
+            'luz1': 'Luz da Rua',
+            'luz2': 'Luz do Pasto',
+            'luz3': 'Luz Geral'
+        }[button.id];
+        button.className = isOn ? 'btn btn-desligar' : button.dataset.originalClass;
+    }
 
-            function updateButtonStates() {
-                fetch('/luzes-estados')
-                    .then(response => response.json())
-                    .then(states => {
-                        updateButtonAppearance(document.getElementById('luzSala'), states.luzSalaLigada);
-                        updateButtonAppearance(document.getElementById('luzExterna'), states.luzExternaLigada);
-                        updateButtonAppearance(document.getElementById('luzGalpao'), states.luzGalpaoLigada);
-                        updateButtonAppearance(document.getElementById('luzEntrada'), states.luzEntradaLigada);
-                    });
-            }
+    function updateButtonStates() {
+        fetch('/luzes-estados')
+            .then(response => response.json())
+            .then(states => {
+                updateButtonAppearance(document.getElementById('luz0'), states.luzCasaLigada);
+                updateButtonAppearance(document.getElementById('luz1'), states.luzRuaLigada);
+                updateButtonAppearance(document.getElementById('luz2'), states.luzPastoLigada);
+                updateButtonAppearance(document.getElementById('luz3'), states.luzGeralLigada);
+            })
+            .catch(err => console.error('Erro ao atualizar estados das luzes: ' + err));
+    }
 
-            document.querySelectorAll('.btn').forEach(button => {
-                button.dataset.originalText = button.textContent;
+    document.querySelectorAll('.btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const buttonId = button.id.replace('luz', '');
+            const action = button.textContent === 'Desligar' ? 'desligar' : 'ligar';
 
-                button.addEventListener('click', function() {
-                    const buttonId = button.id.replace('luz', '');
-                    const action = button.textContent === 'Desligar' ? 'desligar' : 'ligar';
-
-                    fetch(`/toggle?action=${action}&id=${buttonId}`)
-                        .then(response => {
-                            if (!response.ok) throw new Error('Erro ao alternar luz, código de status: ' + response.status);
-                            return response.text();
-                        })
-                        .then(() => {
-                            updateButtonAppearance(button, action === 'ligar');
-                        });
-                });
-            });
-
-            updateButtonStates(); 
+            fetch(`/toggle?action=${action}&id=${buttonId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao alternar luz, código de status: ' + response.status);
+                    return response.text();
+                })
+                .then(() => {
+                    if (buttonId === '3') {
+                        updateButtonStates();
+                    } else {
+                        updateButtonAppearance(button, action === 'ligar');
+                    }
+                })
+                .catch(err => console.error('Erro ao alternar luz: ' + err));
         });
+    });
+
+    updateButtonStates(); 
+});
     </script>
 </body>
 </html>
@@ -172,14 +148,14 @@ void setupDashboardPage(AsyncWebServer &server)
 
     server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-        bool luzSalaLigada = readStateFromFile("/estadoLuzSala.txt");
-        bool luzExternaLigada = readStateFromFile("/estadoLuzExterna.txt");
-        bool luzGalpaoLigada = readStateFromFile("/estadoLuzGalpao.txt");
-        bool luzEntradaLigada = readStateFromFile("/estadoLuzEntrada.txt"); 
+        bool luzCasaLigada = readStateFromFile("/estadoLuzCasa.txt");
+        bool luzRuaLigada = readStateFromFile("/estadoLuzRua.txt");
+        bool luzPastoLigada = readStateFromFile("/estadoLuzPasto.txt");
+        bool luzGeralLigada = readStateFromFile("/estadoLuzGeral.txt"); 
 
-        String stateJson = "{\"luzSalaLigada\":" + String(luzSalaLigada) +
-                           ", \"luzExternaLigada\":" + String(luzExternaLigada) +
-                           ", \"luzGalpaoLigada\":" + String(luzGalpaoLigada) +
-                           ", \"luzEntradaLigada\":" + String(luzEntradaLigada) + "}";
+        String stateJson = "{\"luzCasaLigada\":" + String(luzCasaLigada) +
+                           ", \"luzRuaLigada\":" + String(luzRuaLigada) +
+                           ", \"luzPastoLigada\":" + String(luzPastoLigada) +
+                           ", \"luzGeralLigada\":" + String(luzGeralLigada) + "}";
         request->send(200, "application/json", stateJson); });
 }

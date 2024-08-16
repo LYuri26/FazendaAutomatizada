@@ -3,7 +3,7 @@
 
 #include <ESPAsyncWebServer.h>
 
-
+// Função para configurar a página inicial (index)
 void setupIndexPage(AsyncWebServer &server);
 
-#endif 
+#endif // INDEX_H

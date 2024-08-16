@@ -2,8 +2,10 @@
 #include <LittleFS.h>
 #include <WiFi.h>
 
+// Definição do servidor web
 extern AsyncWebServer server;
 
+// Função que retorna a página de gerenciamento Wi-Fi
 const char *getWiFiGerenciamentoPage()
 {
     return R"rawliteral(

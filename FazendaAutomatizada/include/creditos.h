@@ -3,7 +3,7 @@
 
 #include <ESPAsyncWebServer.h>
 
-
+// Função para configurar a página de créditos
 void setupCreditosPage(AsyncWebServer &server);
 
-#endif 
+#endif // CREDITOS_H
