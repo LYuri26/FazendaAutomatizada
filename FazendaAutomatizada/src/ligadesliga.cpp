@@ -6,9 +6,9 @@
 
 void toggleLuz(int index, String action, AsyncWebServerRequest *request);
 
-const int pinoLuzCasa = 2; // GPIO16 no ESP32
-const int pinoLuzRua = 4;   // GPIO4 no ESP32
-const int pinoLuzPasto = 5; // GPIO5 no ESP32
+const int pinoLuzCasa = 26; // GPIO16 no ESP32
+const int pinoLuzRua = 27;   // GPIO4 no ESP32
+const int pinoLuzPasto = 14; // GPIO5 no ESP32
 
 const String arquivoEstadoLuz[] = {"/estadoLuzCasa.txt", "/estadoLuzRua.txt", "/estadoLuzPasto.txt", "/estadoLuzGeral.txt"};
 bool luzEstado[] = {false, false, false};
