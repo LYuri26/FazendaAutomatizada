@@ -158,28 +158,41 @@ void checkSunTimes()
     Serial.println("Horário de nascer do sol definido para: " + sunrise);
     Serial.println("Horário de pôr do sol definido para: " + sunset);
 
-    String currentTime = getTimeClient();
-    String currentHour = currentTime.substring(0, 5);
+    updateTime();
 
-    if (currentHour == sunset)
+    String currentTime = getTimeClient().substring(0, 5);
+    Serial.println("Hora atual: " + currentTime);
+
+    auto timeToMinutes = [](String time) -> int
     {
-        toggleLuz(0, "ligar", nullptr);
-        toggleLuz(1, "ligar", nullptr);
-        toggleLuz(2, "ligar", nullptr);
-        toggleLuz(3, "ligar", nullptr);
-        Serial.println("Luzes ligadas automaticamente com base no horário do pôr do sol.");
+        int hours = time.substring(0, 2).toInt();
+        int minutes = time.substring(3, 5).toInt();
+        return hours * 60 + minutes;
+    };
+
+    int currentMinutes = timeToMinutes(currentTime);
+    int sunriseMinutes = timeToMinutes(sunrise);
+    int sunsetMinutes = timeToMinutes(sunset);
+
+    if (currentMinutes >= sunsetMinutes || currentMinutes < sunriseMinutes)
+    {
+        if (!luzGeralEstado)
+        {
+            toggleLuz(3, "ligar", nullptr);
+            Serial.println("Luzes ligadas automaticamente com base no horário do pôr do sol.");
+        }
     }
-    else if (currentHour == sunrise)
+    else if (currentMinutes >= sunriseMinutes && currentMinutes < sunsetMinutes)
     {
-        toggleLuz(0, "desligar", nullptr);
-        toggleLuz(1, "desligar", nullptr);
-        toggleLuz(2, "desligar", nullptr);
-        toggleLuz(3, "desligar", nullptr);
-        Serial.println("Luzes desligadas automaticamente com base no horário do nascer do sol.");
+        if (luzGeralEstado)
+        {
+            toggleLuz(3, "desligar", nullptr);
+            Serial.println("Luzes desligadas automaticamente com base no horário do nascer do sol.");
+        }
     }
     else
     {
-        Serial.println("Não é hora de ligar ou desligar as luzes.");
+        Serial.println("Nenhuma ação necessária com base na hora atual.");
     }
 }
 

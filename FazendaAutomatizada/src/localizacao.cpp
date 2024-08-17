@@ -10,8 +10,7 @@ const char *API_KEY = "0e8b513d65e2ea28b67c6091e42ae317";
 const char *filePath = "/localizacao.txt";
 
 unsigned long lastUpdateTime = 0;
-const unsigned long updateInterval = 6 * 60 * 60 * 1000;
-const unsigned long dailyUpdateInterval = 24 * 60 * 60 * 1000;
+const unsigned long updateInterval = 30 * 60 * 1000;
 
 String timeStampToBrasiliaTime(unsigned long timestamp)
 {
@@ -147,12 +146,13 @@ void setupDefinirHorarios(AsyncWebServer &server)
 void checkAndUpdateSunTimes()
 {
     unsigned long currentMillis = millis();
-    if (currentMillis - lastUpdateTime < dailyUpdateInterval)
+    if (currentMillis - lastUpdateTime < updateInterval)
         return;
 
     if (!LittleFS.exists(filePath))
     {
         Serial.println("Nenhum local armazenado. Ignorando atualização.");
+        lastUpdateTime = currentMillis; 
         return;
     }
 
@@ -160,6 +160,7 @@ void checkAndUpdateSunTimes()
     if (!file)
     {
         Serial.println("Falha ao abrir o arquivo.");
+        lastUpdateTime = currentMillis; 
         return;
     }
 
@@ -174,12 +175,14 @@ void checkAndUpdateSunTimes()
     if (error)
     {
         Serial.println("Falha ao analisar o arquivo de localização: " + String(error.c_str()));
+        lastUpdateTime = currentMillis; 
         return;
     }
 
     if (!doc.containsKey("cidade"))
     {
         Serial.println("Falha ao encontrar dados necessários no arquivo.");
+        lastUpdateTime = currentMillis;
         return;
     }
 
@@ -199,6 +202,7 @@ void checkAndUpdateSunTimes()
         if (error)
         {
             Serial.println("Falha ao analisar resposta da API: " + String(error.c_str()));
+            lastUpdateTime = currentMillis;
             return;
         }
 
@@ -217,5 +221,5 @@ void checkAndUpdateSunTimes()
         Serial.println(httpCode);
     }
 
-    lastUpdateTime = millis();
+    lastUpdateTime = currentMillis;
 }

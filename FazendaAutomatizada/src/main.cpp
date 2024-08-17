@@ -16,7 +16,7 @@
 AsyncWebServer server(80);
 
 const unsigned long UPDATE_INTERVAL = 300000;
-const unsigned long LIGHTS_CHECK_INTERVAL = 21600000;
+const unsigned long LIGHTS_CHECK_INTERVAL = 300000;
 unsigned long lastUpdate = 0;
 unsigned long lastLightsCheck = 0;
 
@@ -24,6 +24,7 @@ void setupLittleFS();
 void setupServer();
 void updateTime();
 void setupTimeClient();
+void checkSunTimes();
 bool isAuthenticated(AsyncWebServerRequest *request);
 void redirectToAccessDenied(AsyncWebServerRequest *request);
 
@@ -35,6 +36,8 @@ void setup()
     enterAPMode();
     setupServer();
     setupTimeClient();
+    checkAndUpdateSunTimes();
+    checkSunTimes();
 }
 
 void loop()
