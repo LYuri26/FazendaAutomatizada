@@ -15,8 +15,10 @@
 
 AsyncWebServer server(80);
 
-const unsigned long UPDATE_INTERVAL = 300000; // Intervalo para atualizar o tempo e status dos motores (em milissegundos).
-unsigned long lastUpdate = 0;                 // Armazena o timestamp da última atualização de tempo.
+const unsigned long UPDATE_INTERVAL = 300000;         // Intervalo para atualizar o tempo e status dos motores (em milissegundos).
+const unsigned long LIGHTS_CHECK_INTERVAL = 21600000; // Intervalo para verificar e ajustar as luzes (6 horas em milissegundos).
+unsigned long lastUpdate = 0;                         // Armazena o timestamp da última atualização de tempo.
+unsigned long lastLightsCheck = 0;                    // Armazena o timestamp da última verificação das luzes.
 
 void setupLittleFS();
 void setupServer();
@@ -39,18 +41,24 @@ void loop()
 {
     unsigned long currentMillis = millis(); // Obtém o tempo atual em milissegundos desde o boot.
 
-    checkAndUpdateSunTimes();
-
     // Atualiza o tempo periodicamente
     if (currentMillis - lastUpdate >= UPDATE_INTERVAL) // Verifica se o intervalo de atualização foi atingido
     {
-        updateTime();               // Chama a função para atualizar o tempo
         lastUpdate = currentMillis; // Atualiza o timestamp da última atualização
+        updateTime();               // Chama a função para atualizar o tempo
+    }
+
+    // Verifica e ajusta as luzes periodicamente
+    if (currentMillis - lastLightsCheck >= LIGHTS_CHECK_INTERVAL) // Verifica se o intervalo de checagem das luzes foi atingido
+    {
+        lastLightsCheck = currentMillis;
+        checkAndUpdateSunTimes();
+        checkSunTimes();
     }
 
     // Verifica a conexão Wi-Fi periodicamente
     static unsigned long lastCheckTime = 0;
-    if (currentMillis - lastCheckTime >= 600000) // Verifica se o intervalo de checagem foi atingido
+    if (currentMillis - lastCheckTime >= 600000) // Verifica se o intervalo de checagem foi atingido (10 minutos)
     {
         lastCheckTime = currentMillis;
 
@@ -82,7 +90,7 @@ void loop()
         }
     }
 
-    delay(1000);
+    delay(1000); // Pequeno atraso para evitar uso excessivo de CPU
 }
 
 void setupLittleFS()
