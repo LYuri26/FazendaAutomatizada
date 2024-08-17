@@ -1,4 +1,5 @@
 #include <ESPAsyncWebServer.h>
+#include "index.h"
 #include "tempo.h"
 
 void setupIndexPage(AsyncWebServer &server)
@@ -88,11 +89,6 @@ void setupIndexPage(AsyncWebServer &server)
             margin-top: 10px;
             font-size: 14px;
         }
-        #current-time {
-            font-size: 16px;
-            margin-top: 20px;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
@@ -110,29 +106,7 @@ void setupIndexPage(AsyncWebServer &server)
         </form>
         <button onclick="window.location.href='/creditos'" class="btn btn-secondary">Créditos</button>
         <button onclick="window.location.href='/wifigerenciamento'" class="btn btn-warning">Gerenciamento Wi-Fi</button>
-        <div id="current-time">Carregando hora...</div>
     </div>
-    <script>
-        function fetchCurrentTime() {
-            fetch('/currenttime')
-                .then(response => response.text())
-                .then(time => {
-                    document.getElementById('current-time').textContent = 'Hora Atual: ' + time;
-                })
-                .catch(() => {
-                    document.getElementById('current-time').textContent = 'Erro ao obter a hora.';
-                });
-        }
-
-        function updateClock() {
-            fetchCurrentTime();
-            setTimeout(updateClock, 500); // Atualiza a cada 500 ms
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            updateClock(); // Inicia a atualização da hora imediatamente
-        });
-    </script>
 </body>
 </html>
         )rawliteral";
@@ -146,9 +120,4 @@ void setupIndexPage(AsyncWebServer &server)
 
         html.replace("%ERROR_MESSAGE%", errorMessage);
         request->send(200, "text/html", html); });
-
-    server.on("/currenttime", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-        String time = getTimeClient(); // Certifique-se de que essa função está correta
-        request->send(200, "text/plain", time); });
 }
