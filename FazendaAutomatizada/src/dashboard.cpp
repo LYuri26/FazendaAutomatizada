@@ -3,27 +3,7 @@
 #include "dashboard.h"
 #include "ligadesliga.h"
 #include "autenticador.h"
-
-bool readStateFromFile(const char *path)
-{
-    if (!LittleFS.begin())
-    {
-        Serial.println("Falha ao montar o sistema de arquivos");
-        return false;
-    }
-
-    if (LittleFS.exists(path))
-    {
-        File file = LittleFS.open(path, "r");
-        if (file)
-        {
-            String content = file.readString();
-            file.close();
-            return content.toInt() == 1;
-        }
-    }
-    return false;
-}
+#include "localizacao.h"
 
 void setupDashboardPage(AsyncWebServer &server)
 {
@@ -177,6 +157,25 @@ void setupDashboardPage(AsyncWebServer &server)
             font-size: 16px;
             color: #333;
         }
+
+        .localizacao-info {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+        .localizacao-info h3 {
+            margin: 0;
+            font-size: 20px;
+            color: #333;
+        }
+        .localizacao-info p {
+            margin: 5px 0;
+            font-size: 16px;
+            color: #555;
+        }
     </style>
 </head>
 <body>
@@ -190,8 +189,8 @@ void setupDashboardPage(AsyncWebServer &server)
 
         <div class="toggle-settings">
             <p>Deseja definir um horário automático baseado no pôr do sol e nascer do sol para ligar e desligar as luzes?</p>
-            <input type="text" id="cidade-estado" placeholder="Cidade, Estado">
-            <button id="definir-horarios">Definir Horários</button>
+            <input type="text" id="cidade-estado" placeholder="Exemplo: Uberaba-MG">
+            <button id="definir-localizacao">Definir Localização</button>
         </div>
 
         <div class="switch-container">
@@ -199,99 +198,101 @@ void setupDashboardPage(AsyncWebServer &server)
                 <input type="checkbox" id="toggle-settings">
                 <span class="slider"></span>
             </label>
-            <span class="slider-text">Definir Horários Automáticos</span>
+            <span class="slider-text">Definir Localização Automática</span>
+        </div>
+
+        <div class="localizacao-info" id="localizacao-info" style="display: none;">
+            <h3 id="cidade-nome"></h3>
+            <p>Nascer do Sol: <span id="nascer-do-sol"></span></p>
+            <p>Pôr do Sol: <span id="por-do-sol"></span></p>
         </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            function updateButtonAppearance(button, isOn) {
-                if (!button.dataset.originalClass) {
-                    button.dataset.originalClass = button.className;
-                }
-                button.textContent = isOn ? 'Desligar' : {
-                    'luz0': 'Luz da Casa',
-                    'luz1': 'Luz da Rua',
-                    'luz2': 'Luz do Pasto',
-                    'luz3': 'Luz Geral'
-                }[button.id];
-                button.className = isOn ? 'btn btn-desligar' : button.dataset.originalClass;
-            }
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function updateButtonAppearance(button, isOn) {
+        if (!button.dataset.originalClass) {
+            button.dataset.originalClass = button.className;
+        }
+        button.textContent = isOn ? 'Desligar' : {
+            'luz0': 'Luz da Casa',
+            'luz1': 'Luz da Rua',
+            'luz2': 'Luz do Pasto',
+            'luz3': 'Luz Geral'
+        }[button.id];
+        button.className = isOn ? 'btn btn-desligar' : button.dataset.originalClass;
+    }
 
-            function updateButtonStates() {
-                fetch('/luzes-estados')
-                    .then(response => response.json())
-                    .then(states => {
-                        updateButtonAppearance(document.getElementById('luz0'), states.luzCasaLigada);
-                        updateButtonAppearance(document.getElementById('luz1'), states.luzRuaLigada);
-                        updateButtonAppearance(document.getElementById('luz2'), states.luzPastoLigada);
-                        updateButtonAppearance(document.getElementById('luz3'), states.luzGeralLigada);
-                    })
-                    .catch(err => console.error('Erro ao atualizar estados das luzes: ' + err));
-            }
+    function updateButtonStates() {
+        fetch('/luzes-estados')
+            .then(response => response.json())
+            .then(states => {
+                updateButtonAppearance(document.getElementById('luz0'), states.luzCasaLigada);
+                updateButtonAppearance(document.getElementById('luz1'), states.luzRuaLigada);
+                updateButtonAppearance(document.getElementById('luz2'), states.luzPastoLigada);
+                updateButtonAppearance(document.getElementById('luz3'), states.luzGeralLigada);
+            })
+            .catch(err => console.error('Erro ao atualizar estados das luzes: ' + err));
+    }
 
-            document.querySelectorAll('.btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const buttonId = button.id.replace('luz', '');
-                    const action = button.textContent === 'Desligar' ? 'desligar' : 'ligar';
+    document.querySelectorAll('.btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const buttonId = button.id.replace('luz', '');
+            const action = button.textContent === 'Desligar' ? 'desligar' : 'ligar';
 
-                    fetch(`/toggle?action=${action}&id=${buttonId}`)
-                        .then(response => {
-                            if (!response.ok) throw new Error('Erro ao alternar luz, código de status: ' + response.status);
-                            return response.text();
-                        })
-                        .then(() => {
-                            if (buttonId === '3') {
-                                updateButtonStates();
-                            } else {
-                                updateButtonAppearance(button, action === 'ligar');
-                            }
-                        })
-                        .catch(err => console.error('Erro ao alternar luz: ' + err));
-                });
-            });
-
-            document.getElementById('toggle-settings').addEventListener('change', function() {
-                document.querySelector('.toggle-settings').style.display = this.checked ? 'block' : 'none';
-            });
-
-            document.getElementById('definir-horarios').addEventListener('click', function() {
-                const cidadeEstado = document.getElementById('cidade-estado').value;
-                if (!cidadeEstado) {
-                    alert('Por favor, insira uma cidade e estado.');
-                    return;
-                }
-
-                fetch(`/definir-horarios?local=${encodeURIComponent(cidadeEstado)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(`Horários definidos com base no nascer do sol e pôr do sol em ${cidadeEstado}.`);
-                        // Atualizar lógica de horários conforme necessário
-                    })
-                    .catch(err => console.error('Erro ao definir horários automáticos: ' + err));
-            });
-
-            updateButtonStates();
-
-            // Inicializa o switch como desligado
-            document.getElementById('toggle-settings').checked = false;
+            fetch(`/toggle?action=${action}&id=${buttonId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Erro ao alternar luz, código de status: ' + response.status);
+                    return response.text();
+                })
+                .then(() => {
+                    if (buttonId === '3') {
+                        updateButtonStates();
+                    } else {
+                        updateButtonAppearance(button, action === 'ligar');
+                    }
+                })
+                .catch(err => console.error('Erro ao alternar luz: ' + err));
         });
-    </script>
+    });
+
+    document.getElementById('toggle-settings').addEventListener('change', function() {
+        document.querySelector('.toggle-settings').style.display = this.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('definir-localizacao').addEventListener('click', function() {
+        console.log('Botão Definir Localização clicado');
+        const cidadeEstado = document.getElementById('cidade-estado').value.trim();
+        if (!cidadeEstado) {
+            alert('Por favor, insira uma cidade e estado.');
+            return;
+        }
+        // Substitui espaços por hífens e remove espaços adicionais
+        const formattedLocal = cidadeEstado.replace(/\s+/g, '-') 
+        const url = `/definir-horarios?local=${encodeURIComponent(formattedLocal)}`;
+        console.log('URL gerada para definir localização: ' + url);
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Resposta do servidor:', data);
+                if (data.success) {
+                    document.getElementById('cidade-nome').textContent = data.localizacao.cidade;
+                    document.getElementById('nascer-do-sol').textContent = data.localizacao.nascerDoSol;
+                    document.getElementById('por-do-sol').textContent = data.localizacao.porDoSol;
+                    document.getElementById('localizacao-info').style.display = 'block';
+                    alert('Horários definidos com sucesso!');
+                } else {
+                    alert('Erro ao definir horários. Verifique a cidade/estado e tente novamente.');
+                }
+            })
+            .catch(err => console.error('Erro ao definir localização: ' + err));
+    });
+
+    updateButtonStates();
+});
+</script>
 </body>
 </html>
-        )rawliteral";
+)rawliteral";
 
         request->send(200, "text/html", html); });
-
-    server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-        bool luzCasaLigada = readStateFromFile("/estadoLuzCasa.txt");
-        bool luzRuaLigada = readStateFromFile("/estadoLuzRua.txt");
-        bool luzPastoLigada = readStateFromFile("/estadoLuzPasto.txt");
-        bool luzGeralLigada = readStateFromFile("/estadoLuzGeral.txt"); 
-
-        String stateJson = "{\"luzCasaLigada\":" + String(luzCasaLigada) +
-                           ", \"luzRuaLigada\":" + String(luzRuaLigada) +
-                           ", \"luzPastoLigada\":" + String(luzPastoLigada) +
-                           ", \"luzGeralLigada\":" + String(luzGeralLigada) + "}";
-        request->send(200, "application/json", stateJson); });
 }

@@ -11,6 +11,7 @@
 #include "paginaserro.h"
 #include "wifigerenciador.h"
 #include "wifiinterface.h"
+#include "localizacao.h"
 
 AsyncWebServer server(80);
 
@@ -37,6 +38,8 @@ void setup()
 void loop()
 {
     unsigned long currentMillis = millis(); // Obtém o tempo atual em milissegundos desde o boot.
+
+    checkAndUpdateSunTimes();
 
     // Atualiza o tempo periodicamente
     if (currentMillis - lastUpdate >= UPDATE_INTERVAL) // Verifica se o intervalo de atualização foi atingido
