@@ -39,6 +39,30 @@ void storeSunTimes(const String &local, const String &sunrise, const String &sun
     }
 }
 
+String encodeURIComponent(const String &value)
+{
+    String encoded;
+    for (size_t i = 0; i < value.length(); ++i)
+    {
+        char c = value[i];
+        if (c == ' ')
+        {
+            encoded += '+';
+        }
+        else if (c == '-' || c == '_' || c == '.' || c == '~' || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+        {
+            encoded += c;
+        }
+        else
+        {
+            encoded += '%';
+            encoded += String(c >> 4, HEX);
+            encoded += String(c & 0x0F, HEX);
+        }
+    }
+    return encoded;
+}
+
 void setupDefinirHorarios(AsyncWebServer &server)
 {
     server.on("/definir-horarios", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -80,7 +104,11 @@ void setupDefinirHorarios(AsyncWebServer &server)
         String cidade = local.substring(0, hyphenIndex);
         String estado = local.substring(hyphenIndex + 1);
 
-        String url = "http://api.openweathermap.org/data/2.5/weather?q=" + cidade + "," + estado + ",BR&appid=" + String(API_KEY) + "&units=metric";
+        // Codifica o nome da cidade e estado para URL
+        String cidadeCodificada = encodeURIComponent(cidade);
+        String estadoCodificado = encodeURIComponent(estado);
+
+        String url = "http://api.openweathermap.org/data/2.5/weather?q=" + cidadeCodificada + "," + estadoCodificado + ",BR&appid=" + String(API_KEY) + "&units=metric";
         HTTPClient http;
         http.begin(url);
         int httpCode = http.GET();
@@ -147,7 +175,11 @@ void checkAndUpdateSunTimes()
     String cidade = local.substring(0, hyphenIndex);
     String estado = local.substring(hyphenIndex + 1);
 
-    String url = "http://api.openweathermap.org/data/2.5/weather?q=" + cidade + "," + estado + ",BR&appid=" + String(API_KEY) + "&units=metric";
+    // Codifica o nome da cidade e estado para URL
+    String cidadeCodificada = encodeURIComponent(cidade);
+    String estadoCodificado = encodeURIComponent(estado);
+
+    String url = "http://api.openweathermap.org/data/2.5/weather?q=" + cidadeCodificada + "," + estadoCodificado + ",BR&appid=" + String(API_KEY) + "&units=metric";
     HTTPClient http;
     http.begin(url);
     int httpResponseCode = http.GET();

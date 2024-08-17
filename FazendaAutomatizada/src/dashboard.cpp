@@ -253,7 +253,7 @@ void setupDashboardPage(AsyncWebServer &server)
             </div>
             <div id="message" class="message"></div>
         </div>
-        <script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         function displayMessage(message, type) {
             const messageBox = document.getElementById('message');
@@ -270,9 +270,9 @@ void setupDashboardPage(AsyncWebServer &server)
             }
 
             button.textContent = isOn ? 'Desligar' : {
-                'luz0': 'Luz da Casa',
-                'luz1': 'Luz da Rua',
-                'luz2': 'Luz do Pasto',
+                'luz0': 'Luz do Primeiro Andar',
+                'luz1': 'Luz do Segundo Andar',
+                'luz2': 'Luz Externa',
                 'luz3': 'Luz Geral'
             }[button.id];
 
@@ -320,8 +320,8 @@ void setupDashboardPage(AsyncWebServer &server)
                 displayMessage('Por favor, insira uma cidade e estado.', 'error');
                 return;
             }
-            const formattedLocal = cidadeEstado.replace(/\s+/g, '-');
-            const url = `/definir-horarios?local=${encodeURIComponent(formattedLocal)}`;
+            // Encode URL components correctly
+            const url = `/definir-horarios?local=${encodeURIComponent(cidadeEstado)}`;
             console.log('URL gerada para definir localização: ' + url);
             fetch(url)
                 .then(response => response.json())
@@ -350,7 +350,7 @@ void setupDashboardPage(AsyncWebServer &server)
 
         updateButtonStates();
     });
-    </script>
+</script>
     </body>
 </html>
         )rawliteral";
