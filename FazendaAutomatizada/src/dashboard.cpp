@@ -233,7 +233,7 @@ input:checked + .slider:before {
                 <button class="btn btn-luz-rua" id="luz1">Luz da Rua</button>
                 <button class="btn btn-luz-pasto" id="luz2">Luz do Pasto</button>
                 <button class="btn btn-luz-geral" id="luz3">Luz Geral</button>
-                <a href="/logout" class="btn btn-desligar">Logout</a>
+                <a href="/logout" class="btn btn-desligar"id="logout">Logout</a>
 
                 <div class="toggle-settings">
                     <p>Deseja definir um horário automático baseado no pôr do sol e nascer do sol para ligar e desligar as luzes?</p>
@@ -265,19 +265,25 @@ input:checked + .slider:before {
                 messageBox.style.display = 'block';
             }
 
-            function updateButtonAppearance(button, isOn) {
-                if (!button.dataset.originalClass) {
-                    button.dataset.originalClass = button.className;
-                }
-                button.textContent = isOn ? 'Desligar' : {
-                    'luz0': 'Luz da Casa',
-                    'luz1': 'Luz da Rua',
-                    'luz2': 'Luz do Pasto',
-                    'luz3': 'Luz Geral'
-                }[button.id];
-                button.className = isOn ? 'btn btn-desligar' : button.dataset.originalClass;
-            }
+function updateButtonAppearance(button, isOn) {
+    // Ignorar o botão de logout
+    if (button.id === 'logout') {
+        return;
+    }
 
+    if (!button.dataset.originalClass) {
+        button.dataset.originalClass = button.className;
+    }
+
+    button.textContent = isOn ? 'Desligar' : {
+        'luz0': 'Luz da Casa',
+        'luz1': 'Luz da Rua',
+        'luz2': 'Luz do Pasto',
+        'luz3': 'Luz Geral'
+    }[button.id];
+    
+    button.className = isOn ? 'btn btn-desligar' : button.dataset.originalClass;
+}
             function updateButtonStates() {
                 fetch('/luzes-estados')
                     .then(response => {
