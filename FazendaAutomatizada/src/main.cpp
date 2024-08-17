@@ -117,6 +117,7 @@ void setupServer()
     setupLigaDesliga(server);
     setupErrorPages(server);
     setupWiFiGerenciamentoPage(server);
+    setupDefinirHorarios(server);
 
     server.on("/login", HTTP_POST, handleLogin);
     server.on("/logout", HTTP_GET, handleLogout);
@@ -128,6 +129,11 @@ void setupServer()
 
     server.on("/check-auth", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(200, "application/json", "{\"authenticated\":" + String(isAuthenticated(request) ? "true" : "false") + "}"); });
+
+    server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+    // Código para retornar os estados das luzes em JSON
+    request->send(200, "application/json", "{...}"); });
 
     server.onNotFound([](AsyncWebServerRequest *request)
                       { request->send(404, "text/plain", "Not found"); });

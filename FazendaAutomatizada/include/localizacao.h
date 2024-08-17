@@ -3,7 +3,7 @@
 
 #include <ESPAsyncWebServer.h>
 
-void setupLocationPage(AsyncWebServer &server);
 void checkAndUpdateSunTimes();
+void setupDefinirHorarios(AsyncWebServer &server);
 
 #endif // LOCALIZACAO_H
