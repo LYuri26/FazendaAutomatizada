@@ -1,44 +1,21 @@
-#include <WiFi.h>
+#include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 #include "autenticador.h"
 #include "ligadesliga.h"
 
-void toggleLuz(int index, String action, AsyncWebServerRequest *request);
-
-const int pinoLuzCasa = 26; // GPIO16 no ESP32
+const int pinoLuzCasa = 26;  // GPIO16 no ESP32
 const int pinoLuzRua = 27;   // GPIO4 no ESP32
 const int pinoLuzPasto = 14; // GPIO5 no ESP32
 
-const String arquivoEstadoLuz[] = {"/estadoLuzCasa.txt", "/estadoLuzRua.txt", "/estadoLuzPasto.txt", "/estadoLuzGeral.txt"};
-bool luzEstado[] = {false, false, false};
-bool pinoLuzGeral = false; // Corrigido para variável boolean
+const String arquivoEstadoLuz[] = {
+    "/estadoLuzCasa.txt",
+    "/estadoLuzRua.txt",
+    "/estadoLuzPasto.txt",
+    "/estadoLuzGeral.txt"};
 
-void handleToggleAction(AsyncWebServer &server)
-{
-    server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-        Serial.println("Rota '/toggle' acessada.");
-
-        if (!isAuthenticated(request)) {
-            Serial.println("Acesso negado! Usuário não autenticado.");
-            redirectToAccessDenied(request);
-            return;
-        }
-
-        String action = request->getParam("action") ? request->getParam("action")->value() : "";
-        String idParam = request->getParam("id") ? request->getParam("id")->value() : "";
-        int id = idParam.toInt();
-
-        if (action.isEmpty() || id < 0 || id >= 4) {
-            Serial.println("Parâmetros inválidos para a ação de toggle.");
-            request->send(400, "text/plain", "Parâmetros inválidos!");
-            return;
-        }
-
-        Serial.printf("Ação: %s, ID: %d\n", action.c_str(), id);
-        toggleLuz(id, action, request); });
-}
+bool luzEstado[3] = {false, false, false}; // Estado das luzes individuais
+bool luzGeralEstado = false;               // Estado geral que controla todas as luzes
 
 void initLittleFS()
 {
@@ -48,7 +25,6 @@ void initLittleFS()
         Serial.println("Falha ao iniciar LittleFS.");
         return;
     }
-
     Serial.println("LittleFS iniciado com sucesso.");
 
     for (int i = 0; i < 4; i++)
@@ -105,32 +81,6 @@ void saveEstadoLuz(int index, bool state)
     Serial.printf("Estado %s salvo para o arquivo: %s\n", state ? "ligado" : "desligado", arquivoEstadoLuz[index].c_str());
 }
 
-void setupLigaDesliga(AsyncWebServer &server)
-{
-    Serial.println("Configurando função Liga/Desliga...");
-
-    initLittleFS();
-
-    pinMode(pinoLuzCasa, OUTPUT);
-    pinMode(pinoLuzRua, OUTPUT);
-    pinMode(pinoLuzPasto, OUTPUT);
-
-    Serial.println("Carregando estados iniciais das luzes...");
-    luzEstado[0] = readEstadoLuz(0);
-    luzEstado[1] = readEstadoLuz(1);
-    luzEstado[2] = readEstadoLuz(2);
-    pinoLuzGeral = readEstadoLuz(3);
-
-    Serial.println("Aplicando estados iniciais das luzes...");
-    digitalWrite(pinoLuzCasa, luzEstado[0] ? HIGH : LOW);
-    digitalWrite(pinoLuzRua, luzEstado[1] ? HIGH : LOW);
-    digitalWrite(pinoLuzPasto, luzEstado[2] ? HIGH : LOW);
-
-    Serial.println("Estados iniciais aplicados com sucesso.");
-
-    handleToggleAction(server);
-}
-
 void toggleLuz(int index, String action, AsyncWebServerRequest *request)
 {
     bool estado = (action == "ligar");
@@ -162,16 +112,16 @@ void toggleLuz(int index, String action, AsyncWebServerRequest *request)
         saveEstadoLuz(2, estado);
         break;
     case 3:
-        pinoLuzGeral = estado;
+        luzGeralEstado = estado;
         for (int i = 0; i < 3; i++)
         {
-            luzEstado[i] = pinoLuzGeral;
+            luzEstado[i] = luzGeralEstado;
             digitalWrite(i == 0 ? pinoLuzCasa : i == 1 ? pinoLuzRua
                                                        : pinoLuzPasto,
-                         pinoLuzGeral ? HIGH : LOW);
-            saveEstadoLuz(i, pinoLuzGeral);
+                         luzGeralEstado ? HIGH : LOW);
+            saveEstadoLuz(i, luzGeralEstado);
         }
-        saveEstadoLuz(3, pinoLuzGeral);
+        saveEstadoLuz(3, luzGeralEstado);
         break;
     }
 
@@ -183,4 +133,56 @@ void toggleLuz(int index, String action, AsyncWebServerRequest *request)
     Serial.println(estado ? "ligada" : "desligada");
 
     request->send(200, "text/plain", "Luz " + String(index) + " " + (estado ? "ligada" : "desligada") + "!");
+}
+
+void handleToggleAction(AsyncWebServer &server)
+{
+    server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+        Serial.println("Rota '/toggle' acessada.");
+
+        if (!isAuthenticated(request)) {
+            Serial.println("Acesso negado! Usuário não autenticado.");
+            redirectToAccessDenied(request);
+            return;
+        }
+
+        String action = request->getParam("action") ? request->getParam("action")->value() : "";
+        String idParam = request->getParam("id") ? request->getParam("id")->value() : "";
+        int id = idParam.toInt();
+
+        if (action.isEmpty() || id < 0 || id >= 4) {
+            Serial.println("Parâmetros inválidos para a ação de toggle.");
+            request->send(400, "text/plain", "Parâmetros inválidos!");
+            return;
+        }
+
+        Serial.printf("Ação: %s, ID: %d\n", action.c_str(), id);
+        toggleLuz(id, action, request); });
+}
+
+void setupLigaDesliga(AsyncWebServer &server)
+{
+    Serial.println("Configurando função Liga/Desliga...");
+
+    initLittleFS();
+
+    pinMode(pinoLuzCasa, OUTPUT);
+    pinMode(pinoLuzRua, OUTPUT);
+    pinMode(pinoLuzPasto, OUTPUT);
+
+    Serial.println("Carregando estados iniciais das luzes...");
+    luzEstado[0] = readEstadoLuz(0);
+    luzEstado[1] = readEstadoLuz(1);
+    luzEstado[2] = readEstadoLuz(2);
+    luzGeralEstado = readEstadoLuz(3);
+
+    Serial.println("Aplicando estados iniciais das luzes...");
+    digitalWrite(pinoLuzCasa, luzEstado[0] ? HIGH : LOW);
+    digitalWrite(pinoLuzRua, luzEstado[1] ? HIGH : LOW);
+    digitalWrite(pinoLuzPasto, luzEstado[2] ? HIGH : LOW);
+
+    Serial.println("Estados iniciais aplicados com sucesso.");
+
+    handleToggleAction(server); // Agora deve funcionar
 }

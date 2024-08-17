@@ -3,17 +3,13 @@
 
 #include <ESPAsyncWebServer.h>
 
-void toggleLuzCasa(String action, AsyncWebServerRequest *request);
-void toggleLuzRua(String action, AsyncWebServerRequest *request);
-void toggleLuzPasto(String action, AsyncWebServerRequest *request);
-void toggleLuzGeral(String action, AsyncWebServerRequest *request);
+extern bool luzEstado[3];   // Atualizado para 3 luzes individuais
+extern bool luzGeralEstado; // Estado geral das luzes
+
 void setupLigaDesliga(AsyncWebServer &server);
-void handleToggleAction(AsyncWebServerRequest *request);
+void toggleLuz(int index, String action, AsyncWebServerRequest *request);
+bool readEstadoLuz(int index);
+void saveEstadoLuz(int index, bool state);
+void handleToggleAction(AsyncWebServer &server); // Adicionar a declaração
 
-extern const int pinoLuzCasa;
-extern const int pinoLuzRua;
-extern const int pinoLuzPasto;
-extern bool pinoLuzGeral; // Atualizado para bool
-extern bool luzEstado[4];
-
-#endif
+#endif // LIGADESLIGA_H

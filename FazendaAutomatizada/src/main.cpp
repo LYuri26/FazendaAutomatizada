@@ -127,13 +127,15 @@ void setupServer()
     server.on("/toggle", HTTP_ANY, [](AsyncWebServerRequest *request)
               { isAuthenticated(request) ? handleToggleAction(server) : redirectToAccessDenied(request); });
 
-    server.on("/check-auth", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(200, "application/json", "{\"authenticated\":" + String(isAuthenticated(request) ? "true" : "false") + "}"); });
-
     server.on("/luzes-estados", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-    // Código para retornar os estados das luzes em JSON
-    request->send(200, "application/json", "{...}"); });
+        String json = "{";
+        json += "\"luzCasaLigada\":" + String(readEstadoLuz(0)) + ",";
+        json += "\"luzRuaLigada\":" + String(readEstadoLuz(1)) + ",";
+        json += "\"luzPastoLigada\":" + String(readEstadoLuz(2)) + ",";
+        json += "\"luzGeralLigada\":" + String(readEstadoLuz(3));
+        json += "}";
+        request->send(200, "application/json", json); });
 
     server.onNotFound([](AsyncWebServerRequest *request)
                       { request->send(404, "text/plain", "Not found"); });
