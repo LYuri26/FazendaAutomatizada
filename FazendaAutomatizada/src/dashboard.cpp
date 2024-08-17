@@ -222,9 +222,9 @@ void setupDashboardPage(AsyncWebServer &server)
     <body>
         <div class="dashboard-container">
             <h2>Painel de Controle</h2>
-            <button id="luz0" class="btn btn-luz-casa">Luz da Casa</button>
-            <button id="luz1" class="btn btn-luz-rua">Luz da Rua</button>
-            <button id="luz2" class="btn btn-luz-pasto">Luz do Pasto</button>
+            <button id="luz0" class="btn btn-luz-casa">Luz do Primeiro Andar</button>
+            <button id="luz1" class="btn btn-luz-rua">Luz do Segundo Andar</button>
+            <button id="luz2" class="btn btn-luz-pasto">Luz Externa</button>
             <button id="luz3" class="btn btn-luz-geral">Luz Geral</button>
             <button id="logout" class="btn btn-logout"
                 onclick="location.href='/logout'">Logout</button>
