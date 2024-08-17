@@ -6,6 +6,12 @@ void setupIndexPage(AsyncWebServer &server)
 {
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
               {
+        String errorMessage;
+        if (request->hasParam("login_failed"))
+            errorMessage = "Usuário ou senha incorretos.";
+        else
+            errorMessage = "";
+
         String html = R"rawliteral(
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -110,13 +116,6 @@ void setupIndexPage(AsyncWebServer &server)
 </body>
 </html>
         )rawliteral";
-
-        String errorMessage;
-        if (request->hasParam("login_failed")) {
-            errorMessage = "Usuário ou senha incorretos.";
-        } else {
-            errorMessage = "";
-        }
 
         html.replace("%ERROR_MESSAGE%", errorMessage);
         request->send(200, "text/html", html); });

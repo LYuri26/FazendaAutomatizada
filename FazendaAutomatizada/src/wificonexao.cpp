@@ -23,13 +23,9 @@ void formatLittleFS()
     {
         Serial.println("Formatando LittleFS...");
         if (LittleFS.format())
-        {
             Serial.println("Formatação concluída.");
-        }
         else
-        {
             Serial.println("Falha ao formatar LittleFS.");
-        }
         LittleFS.end();
     }
     else
@@ -116,9 +112,7 @@ bool connectToSavedNetworks()
                 return true;
             }
             else
-            {
                 Serial.println("Falha ao conectar na rede salva.");
-            }
         }
     }
 

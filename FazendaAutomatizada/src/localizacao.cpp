@@ -6,31 +6,29 @@
 #include "autenticador.h"
 #include "dashboard.h"
 
-const char *API_KEY = "0e8b513d65e2ea28b67c6091e42ae317"; // Substitua pela sua chave da API do OpenWeather
+const char *API_KEY = "0e8b513d65e2ea28b67c6091e42ae317";
 const char *filePath = "/localizacao.txt";
 
 unsigned long lastUpdateTime = 0;
-const unsigned long updateInterval = 6 * 60 * 60 * 1000; // 6 horas em milissegundos
+const unsigned long updateInterval = 6 * 60 * 60 * 1000;
+const unsigned long dailyUpdateInterval = 24 * 60 * 60 * 1000;
 
-// Função que converte timestamp para o horário de Brasília
 String timeStampToBrasiliaTime(unsigned long timestamp)
 {
     time_t rawtime = timestamp;
     struct tm *ti = gmtime(&rawtime);
-    ti->tm_hour -= 3; // Ajusta para o horário de Brasília (UTC-3)
-    mktime(ti);       // Corrige a estrutura tm
+    ti->tm_hour -= 3;
+    mktime(ti);
     char buffer[80];
     strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", ti);
     return String(buffer);
 }
 
-// Função para armazenar os horários de nascer e pôr do sol
 void storeSunTimes(const String &sunrise, const String &sunset)
 {
     File file = LittleFS.open(filePath, "w");
     if (file)
     {
-        // Salva os horários no formato desejado
         file.println("sunrise:" + sunrise);
         file.println("sunset:" + sunset);
         file.close();
@@ -42,7 +40,6 @@ void storeSunTimes(const String &sunrise, const String &sunset)
     }
 }
 
-// Função para codificar URL (substituto para encodeURIComponent)
 String encodeURIComponent(const String &value)
 {
     String encoded;
@@ -53,7 +50,9 @@ String encodeURIComponent(const String &value)
         {
             encoded += '+';
         }
-        else if (c == '-' || c == '_' || c == '.' || c == '~' || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+        else if (c == '-' || c == '_' || c == '.' || c == '~' ||
+                 (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') ||
+                 (c >= 'a' && c <= 'z'))
         {
             encoded += c;
         }
@@ -67,7 +66,6 @@ String encodeURIComponent(const String &value)
     return encoded;
 }
 
-// Função para configurar o endpoint /definir-horarios
 void setupDefinirHorarios(AsyncWebServer &server)
 {
     server.on("/definir-horarios", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -109,7 +107,6 @@ void setupDefinirHorarios(AsyncWebServer &server)
         String cidade = local.substring(0, hyphenIndex);
         String estado = local.substring(hyphenIndex + 1);
 
-        // Codifica o nome da cidade e estado para URL
         String cidadeCodificada = encodeURIComponent(cidade);
         String estadoCodificado = encodeURIComponent(estado);
 
@@ -121,7 +118,7 @@ void setupDefinirHorarios(AsyncWebServer &server)
         http.end();
 
         if (httpCode == 200) {
-            DynamicJsonDocument jsonDoc(2048); // Usando DynamicJsonDocument ao invés de JsonDocument
+            DynamicJsonDocument jsonDoc(2048);
             DeserializationError error = deserializeJson(jsonDoc, payload);
             if (error) {
                 Serial.println("Falha ao analisar resposta da API: " + String(error.c_str()));
@@ -132,7 +129,6 @@ void setupDefinirHorarios(AsyncWebServer &server)
             String nascerDoSol = timeStampToBrasiliaTime(jsonDoc["sys"]["sunrise"].as<unsigned long>()).substring(11, 16);
             String porDoSol = timeStampToBrasiliaTime(jsonDoc["sys"]["sunset"].as<unsigned long>()).substring(11, 16);
 
-            // Salva os horários no formato desejado
             storeSunTimes(nascerDoSol, porDoSol);
 
             Serial.println("Horários definidos com sucesso.");
@@ -148,21 +144,18 @@ void setupDefinirHorarios(AsyncWebServer &server)
         } });
 }
 
-// Função para verificar e atualizar os horários de nascer e pôr do sol
 void checkAndUpdateSunTimes()
 {
-    // Verifica se o intervalo de atualização foi atingido
-    if (millis() - lastUpdateTime < updateInterval)
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastUpdateTime < dailyUpdateInterval)
         return;
 
-    // Verifica se o arquivo de localização existe
     if (!LittleFS.exists(filePath))
     {
         Serial.println("Nenhum local armazenado. Ignorando atualização.");
         return;
     }
 
-    // Abre o arquivo para leitura
     File file = LittleFS.open(filePath, "r");
     if (!file)
     {
@@ -170,13 +163,11 @@ void checkAndUpdateSunTimes()
         return;
     }
 
-    // Lê o conteúdo do arquivo
     String fileContent = file.readString();
     file.close();
 
     Serial.println("Linha lida do arquivo: " + fileContent);
 
-    // Cria um documento JSON e analisa o conteúdo do arquivo
     DynamicJsonDocument doc(1024);
     DeserializationError error = deserializeJson(doc, fileContent);
 
@@ -186,25 +177,45 @@ void checkAndUpdateSunTimes()
         return;
     }
 
-    // Verifica se os campos 'local', 'sunrise' e 'sunset' estão presentes
-    if (!doc.containsKey("local") || !doc.containsKey("sunrise") || !doc.containsKey("sunset"))
+    if (!doc.containsKey("cidade"))
     {
         Serial.println("Falha ao encontrar dados necessários no arquivo.");
         return;
     }
 
-    // Obtém os dados do arquivo
-    String local = doc["local"].as<String>();
-    String sunrise = doc["sunrise"].as<String>();
-    String sunset = doc["sunset"].as<String>();
+    String cidade = doc["cidade"].as<String>();
+    String cidadeCodificada = encodeURIComponent(cidade);
+    String url = "http://api.openweathermap.org/data/2.5/weather?q=" + cidadeCodificada + ",BR&appid=" + String(API_KEY) + "&units=metric";
+    HTTPClient http;
+    http.begin(url);
+    int httpCode = http.GET();
+    String payload = http.getString();
+    http.end();
 
-    Serial.println("Local: " + local);
-    Serial.println("Horário de nascer do sol: " + sunrise);
-    Serial.println("Horário de pôr do sol: " + sunset);
+    if (httpCode == 200)
+    {
+        DynamicJsonDocument jsonDoc(2048);
+        DeserializationError error = deserializeJson(jsonDoc, payload);
+        if (error)
+        {
+            Serial.println("Falha ao analisar resposta da API: " + String(error.c_str()));
+            return;
+        }
 
-    // Se necessário, você pode fazer uma atualização com base nos dados atuais
-    // Atualizar o horário de nascer e pôr do sol com base na API
+        String nascerDoSol = timeStampToBrasiliaTime(jsonDoc["sys"]["sunrise"].as<unsigned long>()).substring(11, 16);
+        String porDoSol = timeStampToBrasiliaTime(jsonDoc["sys"]["sunset"].as<unsigned long>()).substring(11, 16);
 
-    // Atualiza o tempo da última atualização
+        storeSunTimes(nascerDoSol, porDoSol);
+
+        Serial.println("Horários atualizados com sucesso.");
+        Serial.println("Nascer do sol: " + nascerDoSol);
+        Serial.println("Pôr do sol: " + porDoSol);
+    }
+    else
+    {
+        Serial.print("Erro ao buscar dados da API, código HTTP: ");
+        Serial.println(httpCode);
+    }
+
     lastUpdateTime = millis();
 }

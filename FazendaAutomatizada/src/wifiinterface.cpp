@@ -93,19 +93,19 @@ const char *getWiFiGerenciamentoPage()
         <div id="file-contents">Aguardando conteúdo do arquivo...</div>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', () => {
             fetchSavedNetworks();
             updateDeviceIP();
             fetchFileContents();
 
-            document.getElementById('toggle-password').addEventListener('click', function() {
+            document.getElementById('toggle-password').addEventListener('click', () => {
                 const passwordField = document.getElementById('password');
                 const isPassword = passwordField.type === 'password';
                 passwordField.type = isPassword ? 'text' : 'password';
                 this.textContent = isPassword ? 'Ocultar' : 'Mostrar';
             });
 
-            document.getElementById('save-form').addEventListener('submit', function(event) {
+            document.getElementById('save-form').addEventListener('submit', event => {
                 event.preventDefault();
                 fetch(this.action, {
                     method: this.method,
@@ -124,7 +124,7 @@ const char *getWiFiGerenciamentoPage()
             });
         });
 
-        function fetchSavedNetworks() {
+        const fetchSavedNetworks = () => {
             fetch('/listadewifi')
                 .then(response => response.text())
                 .then(data => {
@@ -138,9 +138,9 @@ const char *getWiFiGerenciamentoPage()
                 .catch(() => {
                     document.getElementById('saved-networks').innerHTML = '<p>Erro ao buscar redes salvas.</p>';
                 });
-        }
+        };
 
-        function updateDeviceIP() {
+        const updateDeviceIP = () => {
             fetch('/getip')
                 .then(response => response.text())
                 .then(ip => {
@@ -149,9 +149,9 @@ const char *getWiFiGerenciamentoPage()
                 .catch(() => {
                     document.getElementById('device-ip').innerHTML = '<p>Erro ao buscar IP do dispositivo.</p>';
                 });
-        }
+        };
 
-        function fetchFileContents() {
+        const fetchFileContents = () => {
             fetch('/filecontents')
                 .then(response => response.text())
                 .then(content => {
@@ -165,9 +165,8 @@ const char *getWiFiGerenciamentoPage()
                 .catch(() => {
                     document.getElementById('file-contents').innerHTML = '<p>Erro ao buscar conteúdo do arquivo.</p>';
                 });
-        }
+        };
 
-        // Atualiza o IP e o conteúdo do arquivo a cada 10 segundos
         setInterval(updateDeviceIP, 10000);
         setInterval(fetchFileContents, 10000);
     </script>

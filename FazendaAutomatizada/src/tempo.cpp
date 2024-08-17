@@ -3,11 +3,11 @@
 #include <WiFiUdp.h>
 
 const char *ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = -10800; // Fuso horário UTC-3 (Horário de Brasília)
+const long gmtOffset_sec = -10800; // UTC-3 (Horário de Brasília)
 const int daylightOffset_sec = 0;
 
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, ntpServer, gmtOffset_sec, 60000); // Atualiza a cada 60 segundos
+NTPClient timeClient(ntpUDP, ntpServer, gmtOffset_sec, 60000);
 
 String currentTime = "";
 
@@ -24,12 +24,10 @@ void setupTimeClient()
     Serial.println(currentTime);
 }
 
-// Implementação da função para obter o tempo formatado
 String getTimeClient()
 {
     timeClient.update();
-    String formattedTime = timeClient.getFormattedTime();
-    return formattedTime; // Retorna o tempo formatado incluindo horas, minutos e segundos
+    return timeClient.getFormattedTime();
 }
 
 void updateTime()
@@ -44,7 +42,7 @@ void updateTime()
         char timeString[30];
         snprintf(timeString, sizeof(timeString), "%02d-%02d-%04d %02d:%02d:%02d",
                  timeInfo.tm_mday, timeInfo.tm_mon + 1, timeInfo.tm_year + 1900,
-                 timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec); // Adicionado segundos
+                 timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec);
         currentTime = String(timeString);
 
         Serial.println("Hora atual da Internet: " + currentTime);
@@ -64,11 +62,11 @@ void setTimeFromNTP()
         struct tm timeInfo;
         if (getLocalTime(&timeInfo))
         {
-            Serial.print("Hora interna configurada para: ");
             char timeString[30];
             snprintf(timeString, sizeof(timeString), "%02d-%02d-%04d %02d:%02d:%02d",
                      timeInfo.tm_mday, timeInfo.tm_mon + 1, timeInfo.tm_year + 1900,
-                     timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec); // Adicionado segundos
+                     timeInfo.tm_hour, timeInfo.tm_min, timeInfo.tm_sec);
+            Serial.print("Hora interna configurada para: ");
             Serial.println(timeString);
         }
         else
@@ -91,6 +89,6 @@ void printInternalTime()
     char timeString[30];
     snprintf(timeString, sizeof(timeString), "%02d-%02d-%04d %02d:%02d:%02d",
              timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900,
-             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec); // Adicionado segundos
+             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
     Serial.println("Hora interna do ESP32: " + String(timeString));
 }

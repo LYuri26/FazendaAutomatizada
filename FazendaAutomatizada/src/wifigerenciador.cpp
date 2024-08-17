@@ -7,7 +7,6 @@
 
 extern AsyncWebServer server;
 
-// Função para criar o arquivo se não existir
 void initializeFile()
 {
     if (!LittleFS.begin())
@@ -24,7 +23,6 @@ void initializeFile()
             Serial.println("Erro ao criar o arquivo wifiredes.txt.");
             return;
         }
-        // Cria o arquivo vazio
         file.print("");
         file.close();
         Serial.println("Arquivo wifiredes.txt criado com sucesso.");
@@ -35,20 +33,16 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
 {
     Serial.println("Configurando rotas de gerenciamento Wi-Fi...");
 
-    // Inicializa o arquivo
     initializeFile();
 
-    // Rota para a página de gerenciamento
     server.on("/wifigerenciamento", HTTP_GET, [](AsyncWebServerRequest *request)
               {
         Serial.println("Rota /wifigerenciamento acessada.");
         request->send(200, "text/html", getWiFiGerenciamentoPage()); });
 
-    // Rota para listar redes Wi-Fi salvas
     server.on("/listadewifi", HTTP_GET, [](AsyncWebServerRequest *request)
               {
         Serial.println("Rota /listadewifi acessada.");
-
         File file = LittleFS.open("/wifiredes.txt", "r");
         if (!file)
         {
@@ -56,12 +50,10 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
             request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
             return;
         }
-
         String networks = file.readString();
         file.close();
         request->send(200, "text/plain", networks); });
 
-    // Rota para salvar uma nova rede Wi-Fi
     server.on("/salvarwifi", HTTP_POST, [](AsyncWebServerRequest *request)
               {
         Serial.println("Rota /salvarwifi acessada.");
@@ -70,7 +62,6 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
         {
             String ssid = request->getParam("ssid", true)->value();
             String password = request->getParam("password", true)->value();
-
             File file = LittleFS.open("/wifiredes.txt", "r");
             if (!file)
             {
@@ -126,7 +117,7 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
             file.print(newContent);
             file.close();
 
-            connectToSavedNetworks();  // Certifique-se de implementar esta função para conectar-se às redes salvas
+            connectToSavedNetworks();
             request->redirect("/wifigerenciamento");
         }
         else
@@ -134,7 +125,6 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
             request->send(400, "text/plain", "Dados ausentes.");
         } });
 
-    // Rota para excluir uma rede Wi-Fi
     server.on("/excluirwifi", HTTP_GET, [](AsyncWebServerRequest *request)
               {
         Serial.println("Rota /excluirwifi acessada.");
@@ -142,7 +132,6 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
         if (request->hasParam("ssid"))
         {
             String ssidToDelete = request->getParam("ssid")->value();
-
             File file = LittleFS.open("/wifiredes.txt", "r");
             if (!file)
             {
@@ -206,17 +195,14 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
             request->send(400, "text/plain", "SSID ausente.");
         } });
 
-    // Rota para obter o IP do dispositivo
     server.on("/getip", HTTP_GET, [](AsyncWebServerRequest *request)
               {
         Serial.println("Rota /getip acessada.");
         request->send(200, "text/plain", WiFi.localIP().toString()); });
 
-    // Rota para servir o conteúdo do arquivo de redes Wi-Fi na interface
     server.on("/filecontents", HTTP_GET, [](AsyncWebServerRequest *request)
               {
         Serial.println("Rota /filecontents acessada.");
-
         File file = LittleFS.open("/wifiredes.txt", "r");
         if (!file)
         {
@@ -224,7 +210,6 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
             request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
             return;
         }
-
         String content = file.readString();
         file.close();
         request->send(200, "text/plain", content); });

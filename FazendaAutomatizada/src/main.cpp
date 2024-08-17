@@ -15,50 +15,47 @@
 
 AsyncWebServer server(80);
 
-const unsigned long UPDATE_INTERVAL = 300000;         // Intervalo para atualizar o tempo e status dos motores (em milissegundos).
-const unsigned long LIGHTS_CHECK_INTERVAL = 21600000; // Intervalo para verificar e ajustar as luzes (6 horas em milissegundos).
-unsigned long lastUpdate = 0;                         // Armazena o timestamp da última atualização de tempo.
-unsigned long lastLightsCheck = 0;                    // Armazena o timestamp da última verificação das luzes.
+const unsigned long UPDATE_INTERVAL = 300000;
+const unsigned long LIGHTS_CHECK_INTERVAL = 21600000;
+unsigned long lastUpdate = 0;
+unsigned long lastLightsCheck = 0;
 
 void setupLittleFS();
 void setupServer();
-void updateTime();      // Declara a função para atualizar o tempo.
-void setupTimeClient(); // Declara a função
+void updateTime();
+void setupTimeClient();
 bool isAuthenticated(AsyncWebServerRequest *request);
 void redirectToAccessDenied(AsyncWebServerRequest *request);
 
 void setup()
 {
     Serial.begin(115200);
-    setupLittleFS();         // Inicializa o LittleFS
-    loadSavedWiFiNetworks(); // Carrega redes Wi-Fi salvas
-    enterAPMode();           // Configura o modo Access Point
-    setupServer();           // Configura o servidor web
-    setupTimeClient();       // Configura o cliente de tempo para sincronizar o tempo
+    setupLittleFS();
+    loadSavedWiFiNetworks();
+    enterAPMode();
+    setupServer();
+    setupTimeClient();
 }
 
 void loop()
 {
-    unsigned long currentMillis = millis(); // Obtém o tempo atual em milissegundos desde o boot.
+    unsigned long currentMillis = millis();
 
-    // Atualiza o tempo periodicamente
-    if (currentMillis - lastUpdate >= UPDATE_INTERVAL) // Verifica se o intervalo de atualização foi atingido
+    if (currentMillis - lastUpdate >= UPDATE_INTERVAL)
     {
-        lastUpdate = currentMillis; // Atualiza o timestamp da última atualização
-        updateTime();               // Chama a função para atualizar o tempo
+        lastUpdate = currentMillis;
+        updateTime();
     }
 
-    // Verifica e ajusta as luzes periodicamente
-    if (currentMillis - lastLightsCheck >= LIGHTS_CHECK_INTERVAL) // Verifica se o intervalo de checagem das luzes foi atingido
+    if (currentMillis - lastLightsCheck >= LIGHTS_CHECK_INTERVAL)
     {
         lastLightsCheck = currentMillis;
         checkAndUpdateSunTimes();
         checkSunTimes();
     }
 
-    // Verifica a conexão Wi-Fi periodicamente
     static unsigned long lastCheckTime = 0;
-    if (currentMillis - lastCheckTime >= 600000) // Verifica se o intervalo de checagem foi atingido (10 minutos)
+    if (currentMillis - lastCheckTime >= 600000)
     {
         lastCheckTime = currentMillis;
 
@@ -71,14 +68,7 @@ void loop()
             if (WiFi.status() != WL_CONNECTED)
             {
                 bool connected = connectToSavedNetworks();
-                if (connected)
-                {
-                    Serial.println("Reconectado com sucesso.");
-                }
-                else
-                {
-                    Serial.println("Falha ao reconectar.");
-                }
+                Serial.println(connected ? "Reconectado com sucesso." : "Falha ao reconectar.");
             }
             else
             {
@@ -89,8 +79,7 @@ void loop()
             }
         }
     }
-
-    delay(1000); // Pequeno atraso para evitar uso excessivo de CPU
+    delay(1000);
 }
 
 void setupLittleFS()
@@ -102,17 +91,13 @@ void setupLittleFS()
         {
             Serial.println("Falha ao formatar o LittleFS.");
             while (true)
-            {
                 delay(1000);
-            }
         }
         if (!LittleFS.begin())
         {
             Serial.println("Falha ao inicializar o LittleFS após formatação.");
             while (true)
-            {
                 delay(1000);
-            }
         }
     }
 }
