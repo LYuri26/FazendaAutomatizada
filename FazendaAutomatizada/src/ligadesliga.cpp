@@ -36,6 +36,7 @@ void initLittleFS()
             {
                 file.println("0");
                 file.close();
+                Serial.println("Arquivo criado: " + arquivoEstadoLuz[i]);
             }
         }
     }
@@ -58,6 +59,7 @@ void saveEstadoLuz(int index, bool state)
     {
         file.println(state ? "1" : "0");
         file.close();
+        Serial.println("Estado da luz " + String(index) + " salvo como " + String(state ? "ligada" : "desligada"));
     }
 }
 
@@ -70,17 +72,14 @@ void toggleLuz(int index, String action, AsyncWebServerRequest *request)
     case 0:
         pin = pinoLuzCasa;
         luzEstado[0] = estado;
-        Serial.println("Luz da casa foi " + String(estado ? "ligada" : "desligada"));
         break;
     case 1:
         pin = pinoLuzRua;
         luzEstado[1] = estado;
-        Serial.println("Luz da rua foi " + String(estado ? "ligada" : "desligada"));
         break;
     case 2:
         pin = pinoLuzPasto;
         luzEstado[2] = estado;
-        Serial.println("Luz do pasto foi " + String(estado ? "ligada" : "desligada"));
         break;
     case 3:
         luzGeralEstado = estado;
@@ -90,17 +89,31 @@ void toggleLuz(int index, String action, AsyncWebServerRequest *request)
             pin = (i == 0) ? pinoLuzCasa : (i == 1) ? pinoLuzRua
                                                     : pinoLuzPasto;
             digitalWrite(pin, luzGeralEstado ? HIGH : LOW);
-            Serial.println("Luz " + String(i) + " foi " + String(luzGeralEstado ? "ligada" : "desligada"));
             saveEstadoLuz(i, luzGeralEstado);
         }
         saveEstadoLuz(3, luzGeralEstado);
-        Serial.println("Luzes gerais foram " + String(luzGeralEstado ? "ligadas" : "desligadas"));
         break;
     }
     digitalWrite(pin, estado ? HIGH : LOW);
     saveEstadoLuz(index, estado);
     if (request)
         request->send(200, "text/plain", "Luz " + String(index) + " " + (estado ? "ligada" : "desligada") + "!");
+    Serial.println("Luz " + String(index) + " " + (estado ? "ligada" : "desligada"));
+}
+
+void handleToggleAction(AsyncWebServer &server)
+{
+    server.on("/toggle", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+        String action = request->getParam("action") ? request->getParam("action")->value() : "";
+        String idParam = request->getParam("id") ? request->getParam("id")->value() : "";
+        int id = idParam.toInt();
+        if (action.isEmpty() || id < 0 || id >= 4) {
+            request->send(400, "text/plain", "Parâmetros inválidos!");
+            Serial.println("Parâmetros inválidos!");
+            return;
+        }
+        toggleLuz(id, action, request); });
 }
 
 void checkSunTimes()
@@ -154,6 +167,7 @@ void checkSunTimes()
         toggleLuz(1, "ligar", nullptr);
         toggleLuz(2, "ligar", nullptr);
         toggleLuz(3, "ligar", nullptr);
+        Serial.println("Luzes ligadas automaticamente com base no horário do pôr do sol.");
     }
     else if (currentHour == sunrise)
     {
@@ -161,6 +175,7 @@ void checkSunTimes()
         toggleLuz(1, "desligar", nullptr);
         toggleLuz(2, "desligar", nullptr);
         toggleLuz(3, "desligar", nullptr);
+        Serial.println("Luzes desligadas automaticamente com base no horário do nascer do sol.");
     }
     else
     {
@@ -181,5 +196,9 @@ void setupLigaDesliga(AsyncWebServer &server)
     digitalWrite(pinoLuzCasa, luzEstado[0] ? HIGH : LOW);
     digitalWrite(pinoLuzRua, luzEstado[1] ? HIGH : LOW);
     digitalWrite(pinoLuzPasto, luzEstado[2] ? HIGH : LOW);
+    Serial.println("Estado inicial das luzes: Casa " + String(luzEstado[0] ? "ligada" : "desligada") +
+                   ", Rua " + String(luzEstado[1] ? "ligada" : "desligada") +
+                   ", Pasto " + String(luzEstado[2] ? "ligada" : "desligada") +
+                   ", Geral " + String(luzGeralEstado ? "ligada" : "desligada"));
     handleToggleAction(server);
 }

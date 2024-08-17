@@ -3,7 +3,7 @@
 
 void setupCreditosPage(AsyncWebServer &server)
 {
-    String creditsHtml = R"rawliteral(
+    const String creditsHtml = R"rawliteral(
         <!DOCTYPE html>
         <html lang="pt-br">
         <head>

@@ -1,12 +1,10 @@
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
 
-// Variáveis de sessão
 String sessionId = "";
 unsigned long sessionStartTime = 0;
 const unsigned long sessionTimeout = 5 * 60 * 1000; // 5 minutos
 
-// Função para verificar a autenticação do usuário
 bool isAuthenticated(AsyncWebServerRequest *request)
 {
     if (request->hasHeader("Cookie"))
@@ -23,11 +21,8 @@ bool isAuthenticated(AsyncWebServerRequest *request)
                     Serial.println("Sessão autenticada com sucesso.");
                     return true;
                 }
-                else
-                {
-                    Serial.println("Sessão expirada.");
-                    sessionId = "";
-                }
+                sessionId = "";
+                Serial.println("Sessão expirada.");
             }
             else
             {
@@ -46,7 +41,6 @@ bool isAuthenticated(AsyncWebServerRequest *request)
     return false;
 }
 
-// Função para lidar com o login
 void handleLogin(AsyncWebServerRequest *request)
 {
     if (request->hasParam("username", true) && request->hasParam("password", true))
@@ -80,7 +74,6 @@ void handleLogin(AsyncWebServerRequest *request)
     }
 }
 
-// Função para lidar com o logout
 void handleLogout(AsyncWebServerRequest *request)
 {
     if (isAuthenticated(request))
@@ -99,7 +92,6 @@ void handleLogout(AsyncWebServerRequest *request)
     }
 }
 
-// Função para lidar com o acesso ao Dashboard
 void handleDashboard(AsyncWebServerRequest *request)
 {
     if (isAuthenticated(request))
