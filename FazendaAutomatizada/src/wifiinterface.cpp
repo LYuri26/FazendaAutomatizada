@@ -105,18 +105,19 @@ const char *getWiFiGerenciamentoPage()
                 this.textContent = isPassword ? 'Ocultar' : 'Mostrar';
             });
 
-            document.getElementById('save-form').addEventListener('submit', event => {
-                event.preventDefault();
+            document.getElementById('save-form').addEventListener('submit', function(event) {
+                event.preventDefault(); // Impede o envio padrão do formulário
                 fetch(this.action, {
                     method: this.method,
                     body: new FormData(this)
                 })
-                .then(() => {
-                    document.getElementById('message').textContent = 'Rede conectada com sucesso!';
-                    this.reset();
-                    fetchSavedNetworks();
-                    updateDeviceIP();
-                    fetchFileContents();
+                .then(response => response.text())
+                .then(message => {
+                    document.getElementById('message').textContent = message;
+                    this.reset(); // Limpa o formulário após o envio
+                    fetchSavedNetworks(); // Atualiza a lista de redes salvas
+                    setTimeout(updateDeviceIP, 1000); // Atualiza o IP após 1 segundo
+                    fetchFileContents(); // Atualiza o conteúdo do arquivo
                 })
                 .catch(() => {
                     document.getElementById('message').textContent = 'Erro ao conectar na rede';
@@ -167,8 +168,8 @@ const char *getWiFiGerenciamentoPage()
                 });
         };
 
-        setInterval(updateDeviceIP, 10000);
-        setInterval(fetchFileContents, 10000);
+        setInterval(updateDeviceIP, 10000); // Atualiza o IP a cada 10 segundos
+        setInterval(fetchFileContents, 10000); // Atualiza o conteúdo do arquivo a cada 10 segundos
     </script>
 </body>
 </html>

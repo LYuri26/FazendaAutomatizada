@@ -56,74 +56,33 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
 
     server.on("/salvarwifi", HTTP_POST, [](AsyncWebServerRequest *request)
               {
-        Serial.println("Rota /salvarwifi acessada.");
+    Serial.println("Rota /salvarwifi acessada.");
 
-        if (request->hasParam("ssid", true) && request->hasParam("password", true))
+    if (request->hasParam("ssid", true) && request->hasParam("password", true))
+    {
+        String ssid = request->getParam("ssid", true)->value();
+        String password = request->getParam("password", true)->value();
+        
+        // Adicionando as redes ao arquivo
+        File file = LittleFS.open("/wifiredes.txt", "a"); // Abrindo em modo de adição
+        if (!file)
         {
-            String ssid = request->getParam("ssid", true)->value();
-            String password = request->getParam("password", true)->value();
-            File file = LittleFS.open("/wifiredes.txt", "r");
-            if (!file)
-            {
-                Serial.println("Erro ao abrir o arquivo de redes Wi-Fi para leitura.");
-                request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
-                return;
-            }
-
-            String content = file.readString();
-            file.close();
-
-            String newContent;
-            bool ssidExists = false;
-            unsigned int start = 0;
-            while (start < content.length())
-            {
-                int end = content.indexOf('\n', start);
-                if (end == -1)
-                    end = content.length();
-                String line = content.substring(start, end);
-                int commaIndex = line.indexOf(',');
-                if (commaIndex != -1)
-                {
-                    String savedSSID = line.substring(0, commaIndex);
-                    if (savedSSID == ssid)
-                    {
-                        newContent += ssid + "," + password + "\n";
-                        ssidExists = true;
-                    }
-                    else
-                    {
-                        newContent += line + "\n";
-                    }
-                }
-                else
-                {
-                    newContent += line + "\n";
-                }
-                start = end + 1;
-            }
-            if (!ssidExists)
-            {
-                newContent += ssid + "," + password + "\n";
-            }
-
-            file = LittleFS.open("/wifiredes.txt", "w");
-            if (!file)
-            {
-                Serial.println("Erro ao abrir o arquivo de redes Wi-Fi para escrita.");
-                request->send(500, "text/plain", "Erro ao abrir o arquivo para escrita.");
-                return;
-            }
-            file.print(newContent);
-            file.close();
-
-            connectToSavedNetworks();
-            request->redirect("/wifigerenciamento");
+            Serial.println("Erro ao abrir o arquivo de redes Wi-Fi para escrita.");
+            request->send(500, "text/plain", "Erro ao abrir o arquivo para escrita.");
+            return;
         }
-        else
-        {
-            request->send(400, "text/plain", "Dados ausentes.");
-        } });
+
+        // Escrevendo no arquivo no formato ssid,password\n
+        file.printf("%s,%s\n", ssid.c_str(), password.c_str());
+        file.close();
+
+        Serial.println("Rede salva com sucesso.");
+        request->send(200, "text/plain", "Rede salva com sucesso."); 
+    }
+    else
+    {
+        request->send(400, "text/plain", "Dados ausentes.");
+    } });
 
     server.on("/excluirwifi", HTTP_GET, [](AsyncWebServerRequest *request)
               {

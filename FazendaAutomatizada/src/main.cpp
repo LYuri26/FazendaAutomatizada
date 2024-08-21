@@ -33,7 +33,7 @@ void setup()
     Serial.begin(115200);
     setupLittleFS();
     loadSavedWiFiNetworks();
-    enterAPMode();
+    enterAPMode(); // Define o modo AP inicialmente
     setupServer();
     setupTimeClient();
     checkAndUpdateSunTimes();
@@ -58,7 +58,7 @@ void loop()
     }
 
     static unsigned long lastCheckTime = 0;
-    if (currentMillis - lastCheckTime >= 600000)
+    if (currentMillis - lastCheckTime >= 600000) // 10 minutos
     {
         lastCheckTime = currentMillis;
 
@@ -70,8 +70,7 @@ void loop()
         {
             if (WiFi.status() != WL_CONNECTED)
             {
-                bool connected = connectToSavedNetworks();
-                Serial.println(connected ? "Reconectado com sucesso." : "Falha ao reconectar.");
+                loadSavedWiFiNetworks();
             }
             else
             {
@@ -82,6 +81,7 @@ void loop()
             }
         }
     }
+
     delay(1000);
 }
 
