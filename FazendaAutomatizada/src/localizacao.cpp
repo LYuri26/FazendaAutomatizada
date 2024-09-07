@@ -6,6 +6,7 @@
 #include "autenticador.h"
 #include "dashboard.h"
 #include "tempo.h"
+#include "tela.h" // Incluir o cabeçalho da tela
 
 const char *API_KEY = "0e8b513d65e2ea28b67c6091e42ae317"; // Substitua pela sua chave da API
 const char *filePath = "/localizacao.txt";
@@ -81,10 +82,11 @@ void setupDefinirHorarios(AsyncWebServer &server)
             if (LittleFS.exists(filePath)) {
                 LittleFS.remove(filePath);
                 request->send(200, "application/json", "{\"success\": true, \"message\":\"Localização excluída.\"}");
+                return;
             } else {
                 request->send(404, "application/json", "{\"success\": false, \"message\":\"Nenhuma cidade armazenada para excluir.\"}");
+                return;
             }
-            return;
         }
 
         int hyphenIndex = local.indexOf('-');
@@ -123,12 +125,6 @@ void setupDefinirHorarios(AsyncWebServer &server)
             cidadeSalva = cidade;
             nascerDoSol = sunriseTime;
             porDoSol = sunsetTime;
-
-            // Exibe informações essenciais
-            Serial.println("Horários definidos para a cidade: " + cidadeSalva);
-            Serial.println("Nascer do sol: " + nascerDoSol);
-            Serial.println("Pôr do sol: " + porDoSol);
-
             String response = "{\"success\": true, \"localizacao\": {\"cidade\": \"" + cidade + "\", \"nascerDoSol\": \"" + sunriseTime + "\", \"porDoSol\": \"" + sunsetTime + "\"}}";
             request->send(200, "application/json", response);
         } else {

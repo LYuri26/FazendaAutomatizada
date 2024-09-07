@@ -3,6 +3,7 @@
 
 #include <ESPAsyncWebServer.h>
 
+extern bool controleManual[4];
 extern bool luzEstado[3];
 extern bool luzGeralEstado;
 void setupLigaDesliga(AsyncWebServer &server);

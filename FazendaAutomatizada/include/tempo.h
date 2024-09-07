@@ -11,5 +11,8 @@ String getTimeClient();
 void updateTime();
 void setTimeFromNTP();
 void printInternalTime();
+String obterHoraAtual();
+String obterHoraInternet();
+String getHoraInterna(); // Declaração da nova função
 
 #endif

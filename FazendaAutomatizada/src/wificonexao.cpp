@@ -46,8 +46,10 @@ void enterAPMode()
     WiFi.softAPConfig(local_ip, gateway, subnet);
     WiFi.softAP(ap_ssid, ap_password);
 
-    // Apenas o nome do AP e o IP são exibidos
-    Serial.printf("AP SSID: %s\nAP IP: %s\n", ap_ssid, WiFi.softAPIP().toString().c_str());
+    // Exibe o nome do AP e o IP
+    Serial.printf("Modo AP ativado\n");
+    Serial.printf("AP SSID: %s\n", ap_ssid);
+    Serial.printf("AP IP: %s\n", WiFi.softAPIP().toString().c_str());
 }
 
 bool connectToWiFi(const String &ssid, const String &password)
@@ -57,8 +59,12 @@ bool connectToWiFi(const String &ssid, const String &password)
     {
         if (WiFi.status() == WL_CONNECTED)
         {
-            // Exibe apenas o SSID conectado e o IP local
-            Serial.printf("Conectado à rede: %s\nIP Local: %s\n", ssid.c_str(), WiFi.localIP().toString().c_str());
+            // Exibe o SSID conectado e o IP local
+            Serial.printf("Conectado à rede\n");
+            Serial.printf("SSID: %s\n", ssid.c_str());
+            Serial.printf("IP Local: %s\n", WiFi.localIP().toString().c_str());
+            Serial.printf("Gateway: %s\n", WiFi.gatewayIP().toString().c_str());
+            Serial.printf("Máscara de Sub-rede: %s\n", WiFi.subnetMask().toString().c_str());
             return true;
         }
         delay(500);

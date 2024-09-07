@@ -2,7 +2,7 @@
 #define WIFICONEXAO_H
 
 #include <LittleFS.h>
-#include <WiFi.h> 
+#include <WiFi.h>
 
 extern const char *ap_ssid;
 extern const char *ap_password;

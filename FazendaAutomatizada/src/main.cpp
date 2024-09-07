@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
+#include "tela.h" // Inclua a biblioteca da tela
 
 #include "index.h"
 #include "autenticador.h"
@@ -39,14 +40,32 @@ void redirectToAccessDenied(AsyncWebServerRequest *request);
 void setup()
 {
     Serial.begin(115200);
+    Serial.println("Iniciando o sistema...");
+
     setupLittleFS();
+    Serial.println("LittleFS inicializado com sucesso.");
+
     loadSavedWiFiNetworks();
+    Serial.println("Redes WiFi salvas carregadas.");
+
     enterAPMode(); // Define o modo AP inicialmente
+    Serial.println("Modo Access Point ativado.");
+
     setupServer();
+    Serial.println("Servidor HTTP configurado.");
+
     setupTimeClient();
-    obterDadosLocalizacao();    // Carrega dados iniciais de localização
-    checkAndUpdateSunTimes();   // Atualiza horários de nascer e pôr do sol
-    resetAlteracaoAutomatico(); // Reseta o controle de alteração automática
+    Serial.println("Cliente de tempo configurado.");
+
+    obterDadosLocalizacao(); // Carrega dados iniciais de localização
+    Serial.println("Dados de localização obtidos.");
+
+    checkAndUpdateSunTimes(); // Atualiza horários de nascer e pôr do sol
+    Serial.println("Horários de nascer e pôr do sol atualizados.");
+
+    // Inicializa a tela
+    inicializarTela();
+    Serial.println("Tela TFT inicializada.");
 }
 
 void loop()
@@ -60,7 +79,7 @@ void loop()
         updateTime();             // Atualiza a hora a cada minuto
         checkAndUpdateSunTimes(); // Atualiza nascer/pôr do sol a cada 2 horas
         checkSunTimes();          // Atualiza o estado das luzes com base nos horários
-
+        atualizarTela();          // Atualiza a tela com as informações mais recentes
         // Exibe a cidade e os horários
         if (cidadeSalva != "")
         {
@@ -81,6 +100,7 @@ void loop()
         }
         else if (WiFi.status() != WL_CONNECTED)
         {
+            Serial.println("Desconectado do WiFi. Tentando reconectar...");
             loadSavedWiFiNetworks(); // Tenta reconectar se estiver desconectado
         }
     }
@@ -92,17 +112,21 @@ void setupLittleFS()
 {
     if (!LittleFS.begin())
     {
+        Serial.println("Falha ao iniciar o LittleFS. Tentando formatar...");
         if (!LittleFS.format())
         {
+            Serial.println("Falha na formatação do LittleFS. Sistema parado.");
             while (true)
                 delay(1000); // Falha na formatação do LittleFS, para o sistema
         }
         if (!LittleFS.begin())
         {
+            Serial.println("Falha ao reinicializar o LittleFS após formatação. Sistema parado.");
             while (true)
                 delay(1000); // Falha ao inicializar o LittleFS após formatação
         }
     }
+    Serial.println("LittleFS inicializado com sucesso.");
 }
 
 void setupServer()
@@ -137,9 +161,11 @@ void setupServer()
                       { request->send(404, "text/plain", "Not found"); });
 
     server.begin();
+    Serial.println("Servidor HTTP iniciado.");
 }
 
 void redirectToAccessDenied(AsyncWebServerRequest *request)
 {
     request->redirect("/acesso-invalido");
+    Serial.println("Acesso negado redirecionado.");
 }
