@@ -6,17 +6,12 @@
 #include "localizacao.h"
 
 // Definições de pinos
-#define PINO_LED 4            // Pino do LED da tela TFT
-#define PINO_SCK 13           // Pino do Clock (SCK) para o TFT
-#define PINO_SDA 11           // Pino de Dados (SDA) para o TFT
-#define PINO_AO A0            // Pino Analógico de Entrada (AO)
-#define PINO_RESET 9          // Pino de Reset para o TFT
-#define PINO_CS 10            // Pino de Seleção de Chip (CS) para o TFT
-#define PINO_GND GND          // Pino de Terra
-#define PINO_VCC VCC          // Pino de Alimentação
-#define TAMANHO_TELA 128      // Tamanho da tela em pixels (largura e altura)
-#define SPI_MODE SPI          // Definição para o modo SPI
-#define TAMANHO_TELA_TFT 1.44 // Tamanho da tela em polegadas
+#define PINO_SCK 18  // Pino do Clock (SCK) para o TFT
+#define PINO_SDA 23  // Pino de Dados (SDA) para o TFT
+#define PINO_RESET 5 // Pino de Reset para o TFT
+#define PINO_CS 15   // Pino de Seleção de Chip (CS) para o TFT
+#define PINO_DC 2    // Pino de Data/Command (DC) para o TFT
+#define PINO_LED 13  // Pino do LED Backlight para o TFT
 
 // Inicializa o display TFT
 TFT_eSPI tft = TFT_eSPI(); // Cria um objeto TFT
@@ -26,9 +21,9 @@ void inicializarTela()
 {
     Serial.println("Inicializando a tela TFT...");
 
-    // Configura o pino do LED da tela, se necessário
+    // Configura o pino do LED da tela
     pinMode(PINO_LED, OUTPUT);
-    digitalWrite(PINO_LED, LOW); // Desliga o LED da tela inicialmente
+    digitalWrite(PINO_LED, HIGH); // Liga o LED da tela
 
     Serial.print("Pino do LED da tela configurado como OUTPUT.");
     Serial.print("Estado inicial do LED da tela: ");
@@ -46,11 +41,6 @@ void inicializarTela()
     Serial.print("Rotação: ");
     Serial.println(tft.getRotation());
     Serial.println("Tela preenchida com a cor preta.");
-
-    // Liga o LED da tela
-    digitalWrite(PINO_LED, HIGH);
-    Serial.print("Estado do LED da tela após inicialização: ");
-    Serial.println(digitalRead(PINO_LED) == HIGH ? "Ligado" : "Desligado");
 
     // Atualiza e exibe as informações na tela
     atualizarTela();
@@ -193,28 +183,20 @@ void exibirInformacoesRede()
     {
         // Conectado a uma rede Wi-Fi
         tft.println("Modo AP Desativado");
-        if (WiFi.status() == WL_CONNECTED)
-        {
-            tft.println("SSID Conectado: " + String(WiFi.SSID()));
-            tft.println("IP Local: " + WiFi.localIP().toString());
-            tft.println("Gateway: " + WiFi.gatewayIP().toString());
-            tft.println("Máscara de Sub-rede: " + WiFi.subnetMask().toString());
+        tft.println("SSID Conectado: " + WiFi.SSID());
+        tft.println("IP Local: " + WiFi.localIP().toString());
+        tft.println("Gateway: " + WiFi.gatewayIP().toString());
+        tft.println("Máscara de Sub-rede: " + WiFi.subnetMask().toString());
 
-            Serial.println("Modo AP Desativado");
-            Serial.print("SSID Conectado: ");
-            Serial.println(WiFi.SSID());
-            Serial.print("IP Local: ");
-            Serial.println(WiFi.localIP().toString());
-            Serial.print("Gateway: ");
-            Serial.println(WiFi.gatewayIP().toString());
-            Serial.print("Máscara de Sub-rede: ");
-            Serial.println(WiFi.subnetMask().toString());
-        }
-        else
-        {
-            tft.println("Sem conexão Wi-Fi");
-            Serial.println("Sem conexão Wi-Fi");
-        }
+        Serial.println("Modo AP Desativado");
+        Serial.print("SSID Conectado: ");
+        Serial.println(WiFi.SSID());
+        Serial.print("IP Local: ");
+        Serial.println(WiFi.localIP().toString());
+        Serial.print("Gateway: ");
+        Serial.println(WiFi.gatewayIP().toString());
+        Serial.print("Máscara de Sub-rede: ");
+        Serial.println(WiFi.subnetMask().toString());
     }
 }
 
