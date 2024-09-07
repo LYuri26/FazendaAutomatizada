@@ -1,3 +1,4 @@
+// main.cpp
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
@@ -12,19 +13,26 @@
 #include "wifigerenciador.h"
 #include "wifiinterface.h"
 #include "localizacao.h"
+#include "tempo.h"
 
 AsyncWebServer server(80);
 
-const unsigned long UPDATE_INTERVAL = 300000;
-const unsigned long LIGHTS_CHECK_INTERVAL = 300000;
+const unsigned long UPDATE_INTERVAL = 60000; // Atualização a cada minuto (60.000 ms)
 unsigned long lastUpdate = 0;
 unsigned long lastLightsCheck = 0;
+unsigned long lastWiFiCheck = 0;
+
+extern String cidadeSalva;
+extern String nascerDoSol;
+extern String porDoSol;
 
 void setupLittleFS();
 void setupServer();
 void updateTime();
 void setupTimeClient();
 void checkSunTimes();
+void checkAndUpdateSunTimes();
+void obterDadosLocalizacao();
 bool isAuthenticated(AsyncWebServerRequest *request);
 void redirectToAccessDenied(AsyncWebServerRequest *request);
 
@@ -36,71 +44,63 @@ void setup()
     enterAPMode(); // Define o modo AP inicialmente
     setupServer();
     setupTimeClient();
-    checkAndUpdateSunTimes();
-    checkSunTimes();
+    obterDadosLocalizacao();    // Carrega dados iniciais de localização
+    checkAndUpdateSunTimes();   // Atualiza horários de nascer e pôr do sol
+    resetAlteracaoAutomatico(); // Reseta o controle de alteração automática
 }
 
 void loop()
 {
     unsigned long currentMillis = millis();
 
+    // Atualiza a hora a cada minuto
     if (currentMillis - lastUpdate >= UPDATE_INTERVAL)
     {
         lastUpdate = currentMillis;
-        updateTime();
+        updateTime();             // Atualiza a hora a cada minuto
+        checkAndUpdateSunTimes(); // Atualiza nascer/pôr do sol a cada 2 horas
+        checkSunTimes();          // Atualiza o estado das luzes com base nos horários
+
+        // Exibe a cidade e os horários
+        if (cidadeSalva != "")
+        {
+            Serial.println("Cidade: " + cidadeSalva);
+            Serial.println("Nascer do sol: " + nascerDoSol);
+            Serial.println("Pôr do sol: " + porDoSol);
+        }
     }
 
-    if (currentMillis - lastLightsCheck >= LIGHTS_CHECK_INTERVAL)
+    // Verifica o estado do Wi-Fi e do AP a cada minuto, sem feedbacks repetitivos
+    if (currentMillis - lastWiFiCheck >= UPDATE_INTERVAL)
     {
-        lastLightsCheck = currentMillis;
-        checkAndUpdateSunTimes();
-        checkSunTimes();
-    }
-
-    static unsigned long lastCheckTime = 0;
-    if (currentMillis - lastCheckTime >= 600000) // 10 minutos
-    {
-        lastCheckTime = currentMillis;
+        lastWiFiCheck = currentMillis;
 
         if (isAPMode)
         {
             Serial.println("Modo Access Point ativo.");
         }
-        else
+        else if (WiFi.status() != WL_CONNECTED)
         {
-            if (WiFi.status() != WL_CONNECTED)
-            {
-                loadSavedWiFiNetworks();
-            }
-            else
-            {
-                Serial.print("Conectado à rede Wi-Fi: ");
-                Serial.println(WiFi.SSID());
-                Serial.print("IP Local: ");
-                Serial.println(WiFi.localIP());
-            }
+            loadSavedWiFiNetworks(); // Tenta reconectar se estiver desconectado
         }
     }
 
-    delay(1000);
+    delay(1000); // Loop principal
 }
 
 void setupLittleFS()
 {
     if (!LittleFS.begin())
     {
-        Serial.println("Falha ao inicializar o LittleFS. Tentando formatar...");
         if (!LittleFS.format())
         {
-            Serial.println("Falha ao formatar o LittleFS.");
             while (true)
-                delay(1000);
+                delay(1000); // Falha na formatação do LittleFS, para o sistema
         }
         if (!LittleFS.begin())
         {
-            Serial.println("Falha ao inicializar o LittleFS após formatação.");
             while (true)
-                delay(1000);
+                delay(1000); // Falha ao inicializar o LittleFS após formatação
         }
     }
 }

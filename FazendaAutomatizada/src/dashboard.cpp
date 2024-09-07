@@ -249,8 +249,7 @@ void setupDashboardPage(AsyncWebServer &server)
                         updateButtonAppearance(document.getElementById('luz1'), states.luzRuaLigada);
                         updateButtonAppearance(document.getElementById('luz2'), states.luzPastoLigada);
                         updateButtonAppearance(document.getElementById('luz3'), states.luzGeralLigada);
-                    })
-                    .catch(err => console.error('Erro ao atualizar estados das luzes: ' + err));
+                    });
             }
 
             document.querySelectorAll('.btn').forEach(button => {
@@ -259,18 +258,14 @@ void setupDashboardPage(AsyncWebServer &server)
                     const action = button.textContent === 'Desligar' ? 'desligar' : 'ligar';
 
                     fetch(`/toggle?action=${action}&id=${buttonId}`)
-                        .then(response => {
-                            if (!response.ok) throw new Error('Erro ao alternar luz, código de status: ' + response.status);
-                            return response.text();
-                        })
+                        .then(response => response.text())
                         .then(() => {
                             if (buttonId == 3) {
                                 document.querySelectorAll('.btn').forEach(btn => updateButtonAppearance(btn, action === 'ligar'));
                             } else {
                                 updateButtonAppearance(button, action === 'ligar');
                             }
-                        })
-                        .catch(err => console.error('Erro ao alternar luz: ' + err));
+                        });
                 });
             });
 
@@ -293,8 +288,7 @@ void setupDashboardPage(AsyncWebServer &server)
                         } else {
                             displayMessage('Cidade/Estado não encontrado. Verifique a cidade/estado e tente novamente.', 'error');
                         }
-                    })
-                    .catch(err => console.error('Erro ao definir localização: ' + err));
+                    });
             });
 
             document.getElementById('toggle-settings').addEventListener('change', function() {

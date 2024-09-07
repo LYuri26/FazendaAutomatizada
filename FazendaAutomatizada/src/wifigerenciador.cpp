@@ -11,7 +11,7 @@ void initializeFile()
 {
     if (!LittleFS.begin())
     {
-        Serial.println("Falha ao montar o sistema de arquivos.");
+        Serial.println("Erro ao montar o sistema de arquivos.");
         return;
     }
 
@@ -25,28 +25,21 @@ void initializeFile()
         }
         file.print("");
         file.close();
-        Serial.println("Arquivo wifiredes.txt criado com sucesso.");
     }
 }
 
 void setupWiFiGerenciamentoPage(AsyncWebServer &server)
 {
-    Serial.println("Configurando rotas de gerenciamento Wi-Fi...");
-
     initializeFile();
 
     server.on("/wifigerenciamento", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-        Serial.println("Rota /wifigerenciamento acessada.");
-        request->send(200, "text/html", getWiFiGerenciamentoPage()); });
+              { request->send(200, "text/html", getWiFiGerenciamentoPage()); });
 
     server.on("/listadewifi", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-        Serial.println("Rota /listadewifi acessada.");
         File file = LittleFS.open("/wifiredes.txt", "r");
         if (!file)
         {
-            Serial.println("Erro ao abrir o arquivo de redes Wi-Fi.");
             request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
             return;
         }
@@ -56,27 +49,20 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
 
     server.on("/salvarwifi", HTTP_POST, [](AsyncWebServerRequest *request)
               {
-    Serial.println("Rota /salvarwifi acessada.");
-
     if (request->hasParam("ssid", true) && request->hasParam("password", true))
     {
         String ssid = request->getParam("ssid", true)->value();
         String password = request->getParam("password", true)->value();
         
-        // Adicionando as redes ao arquivo
-        File file = LittleFS.open("/wifiredes.txt", "a"); // Abrindo em modo de adição
+        File file = LittleFS.open("/wifiredes.txt", "a");
         if (!file)
         {
-            Serial.println("Erro ao abrir o arquivo de redes Wi-Fi para escrita.");
             request->send(500, "text/plain", "Erro ao abrir o arquivo para escrita.");
             return;
         }
 
-        // Escrevendo no arquivo no formato ssid,password\n
         file.printf("%s,%s\n", ssid.c_str(), password.c_str());
         file.close();
-
-        Serial.println("Rede salva com sucesso.");
         request->send(200, "text/plain", "Rede salva com sucesso."); 
     }
     else
@@ -86,15 +72,12 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
 
     server.on("/excluirwifi", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-        Serial.println("Rota /excluirwifi acessada.");
-
         if (request->hasParam("ssid"))
         {
             String ssidToDelete = request->getParam("ssid")->value();
             File file = LittleFS.open("/wifiredes.txt", "r");
             if (!file)
             {
-                Serial.println("Erro ao abrir o arquivo de redes Wi-Fi para leitura.");
                 request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
                 return;
             }
@@ -108,8 +91,7 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
             while (start < content.length())
             {
                 int end = content.indexOf('\n', start);
-                if (end == -1)
-                    end = content.length();
+                if (end == -1) end = content.length();
                 String line = content.substring(start, end);
                 int commaIndex = line.indexOf(',');
                 if (commaIndex != -1)
@@ -136,7 +118,6 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
                 file = LittleFS.open("/wifiredes.txt", "w");
                 if (!file)
                 {
-                    Serial.println("Erro ao abrir o arquivo de redes Wi-Fi para escrita.");
                     request->send(500, "text/plain", "Erro ao abrir o arquivo para escrita.");
                     return;
                 }
@@ -155,23 +136,17 @@ void setupWiFiGerenciamentoPage(AsyncWebServer &server)
         } });
 
     server.on("/getip", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-        Serial.println("Rota /getip acessada.");
-        request->send(200, "text/plain", WiFi.localIP().toString()); });
+              { request->send(200, "text/plain", WiFi.localIP().toString()); });
 
     server.on("/filecontents", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-        Serial.println("Rota /filecontents acessada.");
         File file = LittleFS.open("/wifiredes.txt", "r");
         if (!file)
         {
-            Serial.println("Erro ao abrir o arquivo de redes Wi-Fi.");
             request->send(500, "text/plain", "Erro ao abrir o arquivo de redes Wi-Fi");
             return;
         }
         String content = file.readString();
         file.close();
         request->send(200, "text/plain", content); });
-
-    Serial.println("Rotas de gerenciamento Wi-Fi configuradas com sucesso.");
 }

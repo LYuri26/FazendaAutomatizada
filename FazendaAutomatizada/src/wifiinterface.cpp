@@ -98,7 +98,7 @@ const char *getWiFiGerenciamentoPage()
             updateDeviceIP();
             fetchFileContents();
 
-            document.getElementById('toggle-password').addEventListener('click', () => {
+            document.getElementById('toggle-password').addEventListener('click', function() {
                 const passwordField = document.getElementById('password');
                 const isPassword = passwordField.type === 'password';
                 passwordField.type = isPassword ? 'text' : 'password';
@@ -106,7 +106,7 @@ const char *getWiFiGerenciamentoPage()
             });
 
             document.getElementById('save-form').addEventListener('submit', function(event) {
-                event.preventDefault(); // Impede o envio padrão do formulário
+                event.preventDefault();
                 fetch(this.action, {
                     method: this.method,
                     body: new FormData(this)
@@ -114,10 +114,10 @@ const char *getWiFiGerenciamentoPage()
                 .then(response => response.text())
                 .then(message => {
                     document.getElementById('message').textContent = message;
-                    this.reset(); // Limpa o formulário após o envio
-                    fetchSavedNetworks(); // Atualiza a lista de redes salvas
-                    setTimeout(updateDeviceIP, 1000); // Atualiza o IP após 1 segundo
-                    fetchFileContents(); // Atualiza o conteúdo do arquivo
+                    this.reset();
+                    fetchSavedNetworks();
+                    setTimeout(updateDeviceIP, 1000);
+                    fetchFileContents();
                 })
                 .catch(() => {
                     document.getElementById('message').textContent = 'Erro ao conectar na rede';
@@ -168,8 +168,8 @@ const char *getWiFiGerenciamentoPage()
                 });
         };
 
-        setInterval(updateDeviceIP, 10000); // Atualiza o IP a cada 10 segundos
-        setInterval(fetchFileContents, 10000); // Atualiza o conteúdo do arquivo a cada 10 segundos
+        setInterval(updateDeviceIP, 10000);
+        setInterval(fetchFileContents, 10000);
     </script>
 </body>
 </html>
