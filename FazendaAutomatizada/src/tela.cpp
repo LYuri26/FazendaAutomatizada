@@ -46,6 +46,32 @@ void inicializarTela()
     atualizarTela();
 }
 
+// Função para desenhar o sol
+void desenharSol()
+{
+    Serial.println("Desenhando o sol ao amanhecer...");
+    int x = 120;   // Posição X do sol
+    int y = 30;    // Posição Y do sol
+    int raio = 20; // Raio do sol
+
+    // Desenhe o círculo do sol
+    tft.fillCircle(x, y, raio, TFT_YELLOW);
+    Serial.println("Sol desenhado na tela.");
+}
+
+// Função para desenhar a lua
+void desenharLua()
+{
+    Serial.println("Desenhando a lua ao anoitecer...");
+    int x = 120;   // Posição X da lua
+    int y = 30;    // Posição Y da lua
+    int raio = 20; // Raio da lua
+
+    // Desenhe o círculo da lua
+    tft.fillCircle(x, y, raio, TFT_WHITE);
+    Serial.println("Lua desenhada na tela.");
+}
+
 // Função para atualizar a tela com as informações mais recentes
 void atualizarTela()
 {
@@ -111,6 +137,16 @@ void atualizarTela()
 
     // Exibir informações da rede
     exibirInformacoesRede();
+
+    // Verifica se a hora atual está dentro do intervalo de amanhecer e anoitecer
+    if (isEntreAmanhecerEPorDoSol(horaAtual, nascerDoSol, porDoSol))
+    {
+        desenharSol();
+    }
+    else
+    {
+        desenharLua();
+    }
 }
 
 // Função para exibir o estado das luzes na tela
@@ -170,4 +206,23 @@ void exibirInformacoesRede()
             Serial.println("Sem conexão Wi-Fi");
         }
     }
+}
+
+// Função para verificar se a hora atual está entre o nascer do sol e o pôr do sol
+bool isEntreAmanhecerEPorDoSol(String horaAtual, String nascerDoSol, String porDoSol)
+{
+    int minutosHoraAtual = converterParaMinutos(horaAtual);
+    int minutosNascerDoSol = converterParaMinutos(nascerDoSol);
+    int minutosPorDoSol = converterParaMinutos(porDoSol);
+
+    // Verifica se a hora atual está entre o nascer do sol e o pôr do sol
+    return (minutosHoraAtual >= minutosNascerDoSol && minutosHoraAtual <= minutosPorDoSol);
+}
+
+// Função para converter hora no formato "HH:MM" para minutos desde a meia-noite
+int converterParaMinutos(String hora)
+{
+    int horas = hora.substring(0, 2).toInt();
+    int minutos = hora.substring(3, 5).toInt();
+    return horas * 60 + minutos;
 }
