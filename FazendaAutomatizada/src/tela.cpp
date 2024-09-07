@@ -5,11 +5,21 @@
 #include "ligadesliga.h"
 #include "localizacao.h"
 
-// Define o pino do LED da tela
-#define TFT_LED 4
+// Definições de pinos
+#define PINO_LED 4            // Pino do LED da tela TFT
+#define PINO_SCK 13           // Pino do Clock (SCK) para o TFT
+#define PINO_SDA 11           // Pino de Dados (SDA) para o TFT
+#define PINO_AO A0            // Pino Analógico de Entrada (AO)
+#define PINO_RESET 9          // Pino de Reset para o TFT
+#define PINO_CS 10            // Pino de Seleção de Chip (CS) para o TFT
+#define PINO_GND GND          // Pino de Terra
+#define PINO_VCC VCC          // Pino de Alimentação
+#define TAMANHO_TELA 128      // Tamanho da tela em pixels (largura e altura)
+#define SPI_MODE SPI          // Definição para o modo SPI
+#define TAMANHO_TELA_TFT 1.44 // Tamanho da tela em polegadas
 
 // Inicializa o display TFT
-TFT_eSPI tft = TFT_eSPI();
+TFT_eSPI tft = TFT_eSPI(); // Cria um objeto TFT
 
 // Função para inicializar a tela TFT
 void inicializarTela()
@@ -17,12 +27,12 @@ void inicializarTela()
     Serial.println("Inicializando a tela TFT...");
 
     // Configura o pino do LED da tela, se necessário
-    pinMode(TFT_LED, OUTPUT);
-    digitalWrite(TFT_LED, LOW); // Desliga o LED da tela inicialmente
+    pinMode(PINO_LED, OUTPUT);
+    digitalWrite(PINO_LED, LOW); // Desliga o LED da tela inicialmente
 
     Serial.print("Pino do LED da tela configurado como OUTPUT.");
     Serial.print("Estado inicial do LED da tela: ");
-    Serial.println(digitalRead(TFT_LED) == HIGH ? "Ligado" : "Desligado");
+    Serial.println(digitalRead(PINO_LED) == HIGH ? "Ligado" : "Desligado");
 
     // Inicializa o display TFT
     tft.init();
@@ -38,9 +48,9 @@ void inicializarTela()
     Serial.println("Tela preenchida com a cor preta.");
 
     // Liga o LED da tela
-    digitalWrite(TFT_LED, HIGH);
+    digitalWrite(PINO_LED, HIGH);
     Serial.print("Estado do LED da tela após inicialização: ");
-    Serial.println(digitalRead(TFT_LED) == HIGH ? "Ligado" : "Desligado");
+    Serial.println(digitalRead(PINO_LED) == HIGH ? "Ligado" : "Desligado");
 
     // Atualiza e exibe as informações na tela
     atualizarTela();
