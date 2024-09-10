@@ -1,5 +1,8 @@
-#include <TFT_eSPI.h> // Inclua a biblioteca do TFT
-#include <WiFi.h>     // Inclua a biblioteca do Wi-Fi (se necessário)
+#include <TFT_eSPI.h>        // Inclua a biblioteca do TFT
+#include <WiFi.h>            // Inclua a biblioteca do Wi-Fi (se necessário)
+#include <Adafruit_GFX.h>    // Core graphics library
+#include <Adafruit_ST7735.h> // Hardware-specific library for ST7735
+#include <SPI.h>
 
 #include "tela.h"
 #include "tempo.h"
@@ -7,13 +10,13 @@
 #include "ligadesliga.h"
 #include "localizacao.h"
 
-// Definições de pinos para o display TFT ILI9163
-#define PINO_SCK 18  // Pino do Clock (SCK) para o TFT
-#define PINO_SDA 23  // Pino de Dados (MOSI) para o TFT
-#define PINO_RESET 5 // Pino de Reset para o TFT
-#define PINO_CS 15   // Pino de Seleção de Chip (CS) para o TFT
-#define PINO_DC 2    // Pino de Data/Command (DC) para o TFT
-#define PINO_LED 13  // Pino do LED Backlight para o TFT
+// Definições de pinos para o display TFT ST7735
+#define TFT_CS 2    // Pino de Seleção de Chip (CS) para o TFT
+#define TFT_DC 17   // Pino de Data/Command (DC) para o TFT
+#define TFT_MOSI 23 // Pino de Dados (MOSI) para o TFT
+#define TFT_CLK 18  // Pino do Clock (SCK) para o TFT
+#define TFT_RST 0   // Pino de Reset para o TFT
+#define TFT_LED 5   // Pino do LED Backlight para o TFT (opcional, pode ser conectado diretamente ao 5V)
 
 // Inicializa o display TFT
 TFT_eSPI tft = TFT_eSPI(); // Cria um objeto TFT
@@ -29,8 +32,8 @@ void inicializarTela()
     Serial.println("Inicializando a tela TFT...");
 
     // Configura o pino do LED da tela
-    pinMode(PINO_LED, OUTPUT);
-    digitalWrite(PINO_LED, HIGH); // Liga o LED da tela para brilho máximo
+    pinMode(TFT_LED, OUTPUT);
+    digitalWrite(TFT_LED, HIGH); // Liga o LED da tela para brilho máximo
 
     // Configura o display TFT com os pinos fornecidos
     tft.init();
