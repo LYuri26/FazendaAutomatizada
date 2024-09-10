@@ -104,7 +104,6 @@ void loop()
             loadSavedWiFiNetworks(); // Tenta reconectar se estiver desconectado
         }
     }
-
     delay(1000); // Loop principal
 }
 
@@ -162,6 +161,17 @@ void setupServer()
 
     server.begin();
     Serial.println("Servidor HTTP iniciado.");
+
+    server.on("/conectarwifi", HTTP_POST, [](AsyncWebServerRequest *request)
+              {
+    if (request->hasParam("ssid", true) && request->hasParam("password", true)) {
+        String ssid = request->getParam("ssid", true)->value();
+        String password = request->getParam("password", true)->value();
+        attemptConnection(ssid, password);
+        request->send(200, "text/plain", "Tentando conectar...");
+    } else {
+        request->send(400, "text/plain", "Faltam parâmetros.");
+    } });
 }
 
 void redirectToAccessDenied(AsyncWebServerRequest *request)

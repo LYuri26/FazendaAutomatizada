@@ -1,13 +1,15 @@
 #include <TFT_eSPI.h> // Inclua a biblioteca do TFT
+#include <WiFi.h>     // Inclua a biblioteca do Wi-Fi (se necessário)
+
 #include "tela.h"
 #include "tempo.h"
 #include "wificonexao.h"
 #include "ligadesliga.h"
 #include "localizacao.h"
 
-// Definições de pinos
+// Definições de pinos para o display TFT ILI9163
 #define PINO_SCK 18  // Pino do Clock (SCK) para o TFT
-#define PINO_SDA 23  // Pino de Dados (SDA) para o TFT
+#define PINO_SDA 23  // Pino de Dados (MOSI) para o TFT
 #define PINO_RESET 5 // Pino de Reset para o TFT
 #define PINO_CS 15   // Pino de Seleção de Chip (CS) para o TFT
 #define PINO_DC 2    // Pino de Data/Command (DC) para o TFT
@@ -16,25 +18,26 @@
 // Inicializa o display TFT
 TFT_eSPI tft = TFT_eSPI(); // Cria um objeto TFT
 
+// Funções de desenho para sol e lua
+void desenharSol();
+void desenharLua();
+
 // Função para inicializar a tela TFT
 void inicializarTela()
 {
+    Serial.begin(115200);
     Serial.println("Inicializando a tela TFT...");
 
     // Configura o pino do LED da tela
     pinMode(PINO_LED, OUTPUT);
-    digitalWrite(PINO_LED, HIGH); // Liga o LED da tela
+    digitalWrite(PINO_LED, HIGH); // Liga o LED da tela para brilho máximo
 
-    Serial.print("Pino do LED da tela configurado como OUTPUT.");
-    Serial.print("Estado inicial do LED da tela: ");
-    Serial.println(digitalRead(PINO_LED) == HIGH ? "Ligado" : "Desligado");
-
-    // Inicializa o display TFT
+    // Configura o display TFT com os pinos fornecidos
     tft.init();
-    tft.setRotation(1);
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_WHITE);
-    tft.setTextSize(1);
+    tft.setRotation(1);          // Define a rotação da tela
+    tft.fillScreen(TFT_BLACK);   // Preenche a tela com a cor preta
+    tft.setTextColor(TFT_WHITE); // Define a cor do texto como branco
+    tft.setTextSize(1);          // Define o tamanho do texto
 
     Serial.println("Display TFT inicializado.");
     Serial.println("Configurações do display: ");
@@ -45,33 +48,6 @@ void inicializarTela()
     // Atualiza e exibe as informações na tela
     atualizarTela();
 }
-
-// Função para desenhar o sol
-void desenharSol()
-{
-    Serial.println("Desenhando o sol ao amanhecer...");
-    int x = 120;   // Posição X do sol
-    int y = 30;    // Posição Y do sol
-    int raio = 20; // Raio do sol
-
-    // Desenhe o círculo do sol
-    tft.fillCircle(x, y, raio, TFT_YELLOW);
-    Serial.println("Sol desenhado na tela.");
-}
-
-// Função para desenhar a lua
-void desenharLua()
-{
-    Serial.println("Desenhando a lua ao anoitecer...");
-    int x = 120;   // Posição X da lua
-    int y = 30;    // Posição Y da lua
-    int raio = 20; // Raio da lua
-
-    // Desenhe o círculo da lua
-    tft.fillCircle(x, y, raio, TFT_WHITE);
-    Serial.println("Lua desenhada na tela.");
-}
-
 // Função para atualizar a tela com as informações mais recentes
 void atualizarTela()
 {
@@ -80,38 +56,6 @@ void atualizarTela()
     // Obtém a hora atual da internet e interna
     String horaAtual = getTimeClient();         // Hora atual do RTC/NTP
     String horaAtualInterna = getHoraInterna(); // Hora interna
-
-    Serial.print("Hora Atual (NTP/RTC): ");
-    Serial.println(horaAtual);
-    Serial.print("Hora Interna: ");
-    Serial.println(horaAtualInterna);
-
-    Serial.print("Cidade: ");
-    Serial.println(cidadeSalva);
-    Serial.print("Nascer do Sol: ");
-    Serial.println(nascerDoSol);
-    Serial.print("Pôr do Sol: ");
-    Serial.println(porDoSol);
-
-    Serial.print("Estado das Luzes - Casa: ");
-    Serial.println(luzEstado[0] ? "Ligada" : "Desligada");
-    Serial.print("Estado das Luzes - Rua: ");
-    Serial.println(luzEstado[1] ? "Ligada" : "Desligada");
-    Serial.print("Estado das Luzes - Pasto: ");
-    Serial.println(luzEstado[2] ? "Ligada" : "Desligada");
-    Serial.print("Estado da Luz Geral: ");
-    Serial.println(luzGeralEstado ? "Ligada" : "Desligada");
-
-    Serial.print("Controle Manual Casa: ");
-    Serial.println(controleManual[0] ? "Ativo" : "Inativo");
-    Serial.print("Controle Manual Rua: ");
-    Serial.println(controleManual[1] ? "Ativo" : "Inativo");
-    Serial.print("Controle Manual Pasto: ");
-    Serial.println(controleManual[2] ? "Ativo" : "Inativo");
-    Serial.print("Controle Manual Geral: ");
-    Serial.println(controleManual[3] ? "Ativo" : "Inativo");
-
-    Serial.println("Atualizando display TFT...");
 
     // Atualiza o display TFT
     tft.fillScreen(TFT_BLACK);
@@ -152,7 +96,6 @@ void atualizarTela()
 // Função para exibir o estado das luzes na tela
 void exibirEstadoLuzes(bool luzCasa, bool luzRua, bool luzPasto)
 {
-    Serial.println("Exibindo estado das luzes na tela...");
     tft.setCursor(0, 160);
     tft.println("Estado das Luzes:");
     tft.println("Luz Casa: " + String(luzCasa ? "Ligada" : "Desligada"));
@@ -160,44 +103,30 @@ void exibirEstadoLuzes(bool luzCasa, bool luzRua, bool luzPasto)
     tft.println("Luz Pasto: " + String(luzPasto ? "Ligada" : "Desligada"));
 }
 
-// Função para exibir informações da rede conectada e do AP
+// Função para exibir informações da rede conectada
 void exibirInformacoesRede()
 {
-    Serial.println("Exibindo informações da rede na tela...");
     tft.setCursor(0, 200);
+    tft.println("SSID Conectado: " + WiFi.SSID());
+    tft.println("IP Local: " + WiFi.localIP().toString());
+}
 
-    if (isAPMode)
-    {
-        // Modo AP ativo
-        tft.println("Modo AP Ativado");
-        tft.println("AP SSID: " + String(ap_ssid));
-        tft.println("AP IP: " + WiFi.softAPIP().toString());
+// Função para desenhar o sol
+void desenharSol()
+{
+    int x = 120;
+    int y = 30;
+    int raio = 20;
+    tft.fillCircle(x, y, raio, TFT_YELLOW);
+}
 
-        Serial.println("Modo AP Ativado");
-        Serial.print("AP SSID: ");
-        Serial.println(ap_ssid);
-        Serial.print("AP IP: ");
-        Serial.println(WiFi.softAPIP().toString());
-    }
-    else
-    {
-        // Conectado a uma rede Wi-Fi
-        tft.println("Modo AP Desativado");
-        tft.println("SSID Conectado: " + WiFi.SSID());
-        tft.println("IP Local: " + WiFi.localIP().toString());
-        tft.println("Gateway: " + WiFi.gatewayIP().toString());
-        tft.println("Máscara de Sub-rede: " + WiFi.subnetMask().toString());
-
-        Serial.println("Modo AP Desativado");
-        Serial.print("SSID Conectado: ");
-        Serial.println(WiFi.SSID());
-        Serial.print("IP Local: ");
-        Serial.println(WiFi.localIP().toString());
-        Serial.print("Gateway: ");
-        Serial.println(WiFi.gatewayIP().toString());
-        Serial.print("Máscara de Sub-rede: ");
-        Serial.println(WiFi.subnetMask().toString());
-    }
+// Função para desenhar a lua
+void desenharLua()
+{
+    int x = 120;
+    int y = 30;
+    int raio = 20;
+    tft.fillCircle(x, y, raio, TFT_WHITE);
 }
 
 // Função para verificar se a hora atual está entre o nascer do sol e o pôr do sol
@@ -206,8 +135,6 @@ bool isEntreAmanhecerEPorDoSol(String horaAtual, String nascerDoSol, String porD
     int minutosHoraAtual = converterParaMinutos(horaAtual);
     int minutosNascerDoSol = converterParaMinutos(nascerDoSol);
     int minutosPorDoSol = converterParaMinutos(porDoSol);
-
-    // Verifica se a hora atual está entre o nascer do sol e o pôr do sol
     return (minutosHoraAtual >= minutosNascerDoSol && minutosHoraAtual <= minutosPorDoSol);
 }
 

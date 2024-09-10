@@ -19,5 +19,6 @@ void loadSavedWiFiNetworks();
 void enterAPMode();
 bool connectToSavedNetworks();
 bool connectToWiFi(const String &ssid, const String &password);
+void attemptConnection(const String &ssid, const String &password);
 
 #endif

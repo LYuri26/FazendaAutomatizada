@@ -297,24 +297,30 @@ const char *getWiFiGerenciamentoPage()
             this.textContent = isPassword ? 'Ocultar' : 'Mostrar';
         });
 
-        document.getElementById('save-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            fetch(this.action, {
-                method: this.method,
-                body: new FormData(this)
-            })
-            .then(response => response.text())
-            .then(message => {
-                document.getElementById('message').textContent = message;
-                this.reset();
-                fetchSavedNetworks();
-                setTimeout(updateDeviceIP, 1000);
-                fetchFileContents();
-            })
-            .catch(() => {
-                document.getElementById('message').textContent = 'Erro ao conectar na rede';
-            });
+document.getElementById('save-form').addEventListener('submit', function(event) {
+    event.preventDefault();
+    fetch(this.action, {
+        method: this.method,
+        body: new FormData(this)
+    })
+    .then(response => response.text())
+    .then(message => {
+        document.getElementById('message').textContent = message;
+        this.reset();
+        // Tenta conectar imediatamente após salvar
+        fetch('/conectarwifi', {
+            method: 'POST',
+            body: new FormData(this)
+        })
+        .then(response => response.text())
+        .then(connectionMessage => {
+            document.getElementById('message').textContent = connectionMessage;
         });
+    })
+    .catch(() => {
+        document.getElementById('message').textContent = 'Erro ao conectar na rede';
+    });
+});
 
         // Modo Noturno e Alto Contraste
         document.getElementById('modeSwitch').addEventListener('click', function() {

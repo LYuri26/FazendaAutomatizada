@@ -15,7 +15,6 @@ char ssid[32] = "";
 char password[32] = "";
 
 bool isAPMode = false;
-bool connectionAttempted = false;
 
 void formatLittleFS()
 {
@@ -42,7 +41,7 @@ bool initializeLittleFS()
 
 void enterAPMode()
 {
-    WiFi.mode(WIFI_AP_STA);
+    WiFi.mode(WIFI_AP_STA); // Modo AP + STA simultâneo
     WiFi.softAPConfig(local_ip, gateway, subnet);
     WiFi.softAP(ap_ssid, ap_password);
 
@@ -120,8 +119,24 @@ void loadSavedWiFiNetworks()
         return;
     }
 
+    // Tentativa de conectar a redes salvas
     if (!connectToSavedNetworks())
     {
+        Serial.println("Falha ao conectar em qualquer rede salva. Permanecendo em modo AP.");
         enterAPMode();
+    }
+}
+
+void attemptConnection(const String &ssid, const String &password)
+{
+    if (connectToWiFi(ssid, password))
+    {
+        Serial.println("Conexão bem-sucedida. Atualizando página.");
+        // Aqui você pode adicionar a lógica para redirecionar para uma página ou atualizar a interface
+    }
+    else
+    {
+        Serial.println("Falha na conexão. Verifique as credenciais.");
+        // Feedback para o usuário sobre falha na conexão
     }
 }
