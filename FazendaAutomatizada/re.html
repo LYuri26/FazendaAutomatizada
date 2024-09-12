@@ -1,20 +1,3 @@
-#include <ESPAsyncWebServer.h>
-#include <LittleFS.h>
-#include "dashboard.h"
-#include "ligadesliga.h"
-#include "autenticador.h"
-#include "localizacao.h"
-
-void setupDashboardPage(AsyncWebServer &server)
-{
-    server.on("/dashboard", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-        if (!isAuthenticated(request)) {
-            redirectToAccessDenied(request);
-            return;
-        }
-
-        String html = R"rawliteral(
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -590,7 +573,3 @@ void setupDashboardPage(AsyncWebServer &server)
 </body>
 
 </html>
-        )rawliteral";
-
-        request->send(200, "text/html", html); });
-}
