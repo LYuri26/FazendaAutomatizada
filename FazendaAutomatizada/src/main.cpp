@@ -99,8 +99,6 @@ void loop()
             loadSavedWiFiNetworks(); // Tenta reconectar se estiver desconectado
         }
     }
-        checkHorarioUsuario();
-
     delay(1000); // Loop principal
 }
 
