@@ -13,5 +13,6 @@ void saveEstadoLuz(int index, bool state);
 void handleToggleAction(AsyncWebServer &server);
 void checkSunTimes();
 void resetAlteracaoAutomatico();
+void checkHorarioUsuario();
 
 #endif

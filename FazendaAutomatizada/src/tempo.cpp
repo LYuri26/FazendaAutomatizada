@@ -1,7 +1,6 @@
 #include <WiFi.h>
 #include <time.h>
 #include "tempo.h"
-#include "tela.h"
 
 const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = -10800; // UTC-3 (Horário de Brasília)
@@ -63,11 +62,9 @@ void setTimeFromNTP()
         strftime(timeString, sizeof(timeString), "%d-%m-%Y %H:%M:%S", &timeInfo);
         String currentTime = String(timeString);
         Serial.println("Hora interna configurada: " + currentTime);
-        exibirHoraAtual(currentTime); // Exibe a hora configurada na tela
     }
     else
     {
         Serial.println("Falha ao obter a hora com NTP.");
-        exibirHoraAtual("Erro ao obter hora");
     }
 }

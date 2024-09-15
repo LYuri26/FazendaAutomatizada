@@ -6,7 +6,6 @@
 #include "autenticador.h"
 #include "dashboard.h"
 #include "tempo.h"
-#include "tela.h" // Incluir o cabeçalho da tela
 
 const char *API_KEY = "0e8b513d65e2ea28b67c6091e42ae317"; // Substitua pela sua chave da API
 const char *filePath = "/localizacao.txt";

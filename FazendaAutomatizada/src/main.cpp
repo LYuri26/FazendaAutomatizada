@@ -2,7 +2,6 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <LittleFS.h>
-#include "tela.h" // Inclua a biblioteca da tela
 
 #include "index.h"
 #include "autenticador.h"
@@ -63,9 +62,6 @@ void setup()
     checkAndUpdateSunTimes(); // Atualiza horários de nascer e pôr do sol
     Serial.println("Horários de nascer e pôr do sol atualizados.");
 
-    // Inicializa a tela
-    inicializarTela();
-    Serial.println("Tela TFT inicializada.");
 }
 
 void loop()
@@ -79,7 +75,6 @@ void loop()
         updateTime();             // Atualiza a hora a cada minuto
         checkAndUpdateSunTimes(); // Atualiza nascer/pôr do sol a cada 2 horas
         checkSunTimes();          // Atualiza o estado das luzes com base nos horários
-        atualizarTela();          // Atualiza a tela com as informações mais recentes
         // Exibe a cidade e os horários
         if (cidadeSalva != "")
         {
@@ -104,6 +99,8 @@ void loop()
             loadSavedWiFiNetworks(); // Tenta reconectar se estiver desconectado
         }
     }
+        checkHorarioUsuario();
+
     delay(1000); // Loop principal
 }
 
