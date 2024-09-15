@@ -14,5 +14,7 @@ void handleToggleAction(AsyncWebServer &server);
 void checkSunTimes();
 void resetAlteracaoAutomatico();
 void checkHorarioUsuario();
+void handleHorariosActions(AsyncWebServer &server);
+void checkUserDefinedTimes();
 
 #endif

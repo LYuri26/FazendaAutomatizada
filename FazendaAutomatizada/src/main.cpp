@@ -61,7 +61,6 @@ void setup()
 
     checkAndUpdateSunTimes(); // Atualiza horários de nascer e pôr do sol
     Serial.println("Horários de nascer e pôr do sol atualizados.");
-
 }
 
 void loop()
@@ -74,7 +73,8 @@ void loop()
         lastUpdate = currentMillis;
         updateTime();             // Atualiza a hora a cada minuto
         checkAndUpdateSunTimes(); // Atualiza nascer/pôr do sol a cada 2 horas
-        checkSunTimes();          // Atualiza o estado das luzes com base nos horários
+        checkSunTimes();
+        checkUserDefinedTimes();
         // Exibe a cidade e os horários
         if (cidadeSalva != "")
         {
@@ -132,6 +132,7 @@ void setupServer()
     setupErrorPages(server);
     setupWiFiGerenciamentoPage(server);
     setupDefinirHorarios(server);
+    handleHorariosActions(server);
 
     server.on("/login", HTTP_POST, handleLogin);
     server.on("/logout", HTTP_GET, handleLogout);
