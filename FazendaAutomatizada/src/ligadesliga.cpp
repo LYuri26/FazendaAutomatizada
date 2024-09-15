@@ -5,7 +5,6 @@
 #include "autenticador.h"
 #include "tempo.h"
 #include "localizacao.h"
-#include "tela.h" // Adicionar cabeçalho da tela
 
 // Define os pinos para cada luz
 const int pinoLuzCasa = 26;
@@ -128,22 +127,20 @@ void toggleLuz(int index, String action, AsyncWebServerRequest *request)
     // Atualiza o controle manual
     controleManual[index] = true;
 
-    // Exibe mensagem no Serial e na tela
-    String mensagem = (index < 3) ? nomeLuzes[index] + " foi " + (estado ? "ligada" : "desligada") : "Todas as luzes foram " + String(estado ? "ligadas" : "desligadas");
-    Serial.println(mensagem);
+    // Exibe mensagem no Serial
     if (index < 3)
     {
-        exibirEstadoLuzes(luzEstado[0], luzEstado[1], luzEstado[2]);
+        Serial.printf("%s foi %s\n", nomeLuzes[index].c_str(), estado ? "ligada" : "desligada");
     }
     else
     {
-        exibirEstadoLuzes(luzGeralEstado, luzGeralEstado, luzGeralEstado);
+        Serial.println("Todas as luzes foram " + String(estado ? "ligadas" : "desligadas"));
     }
 
     // Envia resposta para o cliente HTTP, se aplicável
     if (request)
     {
-        request->send(200, "text/plain", mensagem);
+        request->send(200, "text/plain", nomeLuzes[index] + " " + (estado ? "ligada" : "desligada") + "!");
     }
 }
 
@@ -211,27 +208,21 @@ void checkSunTimes()
     // Lógica para ligar/desligar as luzes com base no horário
     if ((currentMinutes >= sunsetMinutes || currentMinutes < sunriseMinutes) && !alteracaoAutomaticoRealizada)
     {
-        // Força ligar as luzes ao pôr do sol, mesmo se controle manual tiver sido acionado
-        if (!luzGeralEstado)
+        if (!luzGeralEstado && !controleManual[3])
         {
-            toggleLuz(3, "ligar", nullptr); // Liga todas as luzes
+            toggleLuz(3, "ligar", nullptr);
             Serial.println("Luzes ligadas automaticamente. Motivo: pôr do sol.");
-            exibirEstadoLuzes(luzGeralEstado, luzGeralEstado, luzGeralEstado); // Atualiza a tela
+            alteracaoAutomaticoRealizada = true;
         }
-
-        alteracaoAutomaticoRealizada = true; // Marca que a alteração automática foi realizada
     }
     else if ((currentMinutes >= sunriseMinutes && currentMinutes < sunsetMinutes) && !alteracaoAutomaticoRealizada)
     {
-        // Força desligar as luzes ao nascer do sol, mesmo se controle manual tiver sido acionado
-        if (luzGeralEstado)
+        if (luzGeralEstado && !controleManual[3])
         {
-            toggleLuz(3, "desligar", nullptr); // Desliga todas as luzes
+            toggleLuz(3, "desligar", nullptr);
             Serial.println("Luzes desligadas automaticamente. Motivo: nascer do sol.");
-            exibirEstadoLuzes(luzGeralEstado, luzGeralEstado, luzGeralEstado); // Atualiza a tela
+            alteracaoAutomaticoRealizada = true;
         }
-
-        alteracaoAutomaticoRealizada = true; // Marca que a alteração automática foi realizada
     }
 }
 
@@ -259,9 +250,6 @@ void setupLigaDesliga(AsyncWebServer &server)
     digitalWrite(pinoLuzCasa, luzEstado[0] ? HIGH : LOW);
     digitalWrite(pinoLuzRua, luzEstado[1] ? HIGH : LOW);
     digitalWrite(pinoLuzPasto, luzEstado[2] ? HIGH : LOW);
-
-    // Exibe o estado inicial das luzes na tela
-    exibirEstadoLuzes(luzEstado[0], luzEstado[1], luzEstado[2]);
 
     // Configura o endpoint para alternar as luzes
     handleToggleAction(server);
