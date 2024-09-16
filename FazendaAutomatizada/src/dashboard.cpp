@@ -17,351 +17,484 @@ void setupDashboardPage(AsyncWebServer &server)
         String html = R"rawliteral(
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <style>
-/* Estilo base do corpo */
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f5f5f5; /* Cor neutra de fundo */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-    padding-top: 50px;
-    padding-bottom: 50px;
-    transition: background-color 0.3s, color 0.3s;
-}
+        /* Estilo base do corpo */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            /* Cor neutra de fundo */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding-top: 50px;
+            padding-bottom: 50px;
+            transition: background-color 0.3s, color 0.3s;
+        }
 
-/* Container do dashboard */
-.dashboard-container {
-    background-color: #ffffff; /* Cor clara para contraste */
-    padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    width: 100%;
-    max-width: 600px;
-    box-sizing: border-box;
-    transition: background-color 0.3s, border 0.3s;
-    border: 1px solid #dcdcdc; /* Borda cinza */
-}
+        /* Container do dashboard */
+        .dashboard-container {
+            background-color: #ffffff;
+            /* Cor clara para contraste */
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            transition: background-color 0.3s, border 0.3s;
+            border: 1px solid #dcdcdc;
+            /* Borda cinza */
+        }
 
-/* Cabeçalhos */
-h2 {
-    margin-bottom: 20px;
-    font-size: 24px;
-    color: #333333; /* Cor escura para bom contraste */
-}
+        /* Cabeçalhos */
+        h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333333;
+            /* Cor escura para bom contraste */
+        }
 
-/* Contêiner de Botões de Luzes */
-.light-buttons,
-.logout-container,
-.toggle-buttons,
-.toggle-settings,
-.localizacao-info,
-.horario-container {
-    margin-top: 20px;
-    background-color: #f9f9f9; /* Fundo cinza claro */
-    padding: 15px;
-    border: 1px solid #dcdcdc; /* Borda cinza */
-    border-radius: 12px; /* Bordas arredondadas */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra sutil */
-    text-align: center; /* Centraliza o conteúdo dentro do contêiner */
-    width: 100%;
-    max-width: 600px;
-    box-sizing: border-box;
-}
+        /* Contêiner de Botões de Luzes */
+        .light-buttons,
+        .logout-container,
+        .toggle-buttons,
+        .toggle-settings,
+        .localizacao-info,
+        .horario-container {
+            margin-top: 20px;
+            background-color: #f9f9f9;
+            /* Fundo cinza claro */
+            padding: 15px;
+            border: 1px solid #dcdcdc;
+            /* Borda cinza */
+            border-radius: 12px;
+            /* Bordas arredondadas */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            /* Sombra sutil */
+            text-align: center;
+            /* Centraliza o conteúdo dentro do contêiner */
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
 
-/* Estilo base dos botões */
-.btn,
-.button-toggle,
-.btn-mode-dark,
-.btn-mode-contrast {
-    display: block;
-    padding: 14px;
-    font-size: 18px;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    width: 100%;
-    max-width: 300px; /* Largura máxima para botões maiores */
-    color: #ffffff;
-    transition: background-color 0.3s, transform 0.2s;
-    margin: 10px auto; /* Centraliza horizontalmente */
-    background-color: #2085ac;
-}
+        /* Estilo base dos botões */
+        .btn,
+        .button-toggle,
+        .btn-mode-dark,
+        .btn-mode-contrast {
+            display: block;
+            padding: 14px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            /* Largura máxima para botões maiores */
+            color: #ffffff;
+            transition: background-color 0.3s, transform 0.2s;
+            margin: 10px auto;
+            /* Centraliza horizontalmente */
+            background-color: #2085ac;
+        }
 
-/* Cores específicas dos botões */
-.btn-luz-casa { background-color: #4caf50; } /* Verde para Luz da Casa */
-.btn-luz-rua { background-color: #2196f3; } /* Azul para Luz da Rua */
-.btn-luz-pasto { background-color: #fbc02d; } /* Amarelo para Luz do Pasto */
-.btn-luz-geral { background-color: #9e9e9e; } /* Cinza para Luz Geral */
-.btn-desligar { background-color: #f44336; } /* Vermelho para Desligar */
-.btn-logout { background-color: #e71111; } /* Laranja para Logout */
+        /* Cores específicas dos botões */
+        .btn-luz-casa {
+            background-color: #4caf50;
+        }
 
-.button-toggle { background-color: #2196f3; } /* Azul padrão */
-#toggle-settings-btn { background-color: #4caf50; } /* Verde */
-#toggle-horarios-btn { background-color: #ff9800; } /* Laranja */
+        /* Verde para Luz da Casa */
+        .btn-luz-rua {
+            background-color: #2196f3;
+        }
 
-.btn:hover,
-.button-toggle:hover {
-    opacity: 0.9;
-    transform: scale(1.02);
-}
+        /* Azul para Luz da Rua */
+        .btn-luz-pasto {
+            background-color: #fbc02d;
+        }
 
-/* Estilo da mensagem de sucesso e erro */
-.message {
-    margin-top: 20px;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 16px;
-    display: none;
-    background-color: #f9f9f9; /* Fundo cinza claro */
-    border: 1px solid #dcdcdc; /* Borda cinza */
-}
+        /* Amarelo para Luz do Pasto */
+        .btn-luz-geral {
+            background-color: #b047a5;
+        }
 
-/* Estilo da mensagem de sucesso e erro */
-.message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
+        /* rosa para Luz Geral */
+        .btn-desligar {
+            background-color: #f44336;
+        }
 
-.message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
+        /* Vermelho para Desligar */
+        .btn-logout {
+            background-color: #e71111;
+        }
 
-/* Estilo para o switch */
-.switch-container {
-    display: flex;
-    align-items: center;
-    margin-top: 20px;
-    justify-content: center;
-}
+        /* Laranja para Logout */
 
-.switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-}
+        .button-toggle {
+            background-color: #2196f3;
+        }
 
-.switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
+        /* Azul padrão */
+        #toggle-settings-btn {
+            background-color: #557fbf;
+        }
 
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #b0bec5; /* Cinza claro */
-    transition: .4s;
-    border-radius: 34px;
-}
+        /* Verde */
+        #toggle-horarios-btn {
+            background-color: #ff9800;
+        }
 
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    border-radius: 50%;
-    left: 4px;
-    bottom: 4px;
-    background-color: #ffffff;
-    transition: .4s;
-}
+        /* Laranja */
 
-input:checked + .slider {
-    background-color: #2196f3; /* Azul */
-}
+        .btn:hover,
+        .button-toggle:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
 
-input:checked + .slider:before {
-    transform: translateX(26px);
-}
+        /* Estilo da mensagem de sucesso e erro */
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            display: none;
+            background-color: #f9f9f9;
+            /* Fundo cinza claro */
+            border: 1px solid #dcdcdc;
+            /* Borda cinza */
+        }
 
-.slider-text {
-    margin-left: 10px;
-    font-size: 16px;
-    color: #333333;
-}
+        /* Estilo da mensagem de sucesso e erro */
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
 
-/* Ajustes para modo noturno */
-.dark-mode {
-    background-color: #121212;
-    color: #e0e0e0;
-}
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
 
-.dark-mode .dashboard-container {
-    background-color: #1e1e1e;
-    border: 1px solid #333333;
-}
+        /* Estilo para o switch */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+            justify-content: center;
+        }
 
-.dark-mode .btn-luz-casa { background-color: #66bb6a; } /* Verde claro */
-.dark-mode .btn-luz-rua { background-color: #64b5f6; } /* Azul claro */
-.dark-mode .btn-luz-pasto { background-color: #fbc02d; } /* Amarelo claro */
-.dark-mode .btn-luz-geral { background-color: #bdbdbd; } /* Cinza claro */
-.dark-mode .btn-desligar { background-color: #e57373; } /* Vermelho claro */
-.dark-mode .btn-logout { background-color: #e71111; } /* Laranja claro */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
 
-.dark-mode .button-toggle {
-    background-color: #64b5f6; /* Azul claro */
-}
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
-.dark-mode #toggle-settings-btn {
-    background-color: #4caf50; /* Verde claro */
-}
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #b0bec5;
+            /* Cinza claro */
+            transition: .4s;
+            border-radius: 34px;
+        }
 
-.dark-mode #toggle-horarios-btn {
-    background-color: #ff9800; /* Laranja claro */
-}
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            border-radius: 50%;
+            left: 4px;
+            bottom: 4px;
+            background-color: #ffffff;
+            transition: .4s;
+        }
 
-.dark-mode .toggle-settings, .dark-mode .localizacao-info, .dark-mode .horario-container {
-    background-color: #333333;
-    border-color: #444444;
-}
+        input:checked+.slider {
+            background-color: #2196f3;
+            /* Azul */
+        }
 
-.dark-mode h2, .dark-mode p, .dark-mode label {
-    color: #e0e0e0;
-}
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
 
-/* Ajustes para modo alto contraste */
-.high-contrast-mode {
-    background-color: #000000;
-    color: #ffffff;
-}
+        .slider-text {
+            margin-left: 10px;
+            font-size: 16px;
+            color: #333333;
+        }
 
-.high-contrast-mode .dashboard-container {
-    background-color: #111111;
-    border: 1px solid #ffffff;
-}
+        /* Ajustes para modo noturno */
+        .dark-mode {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
 
-.high-contrast-mode .btn-luz-casa { background-color: #4caf50; } /* Verde visível */
-.high-contrast-mode .btn-luz-rua { background-color: #2196f3; } /* Azul visível */
-.high-contrast-mode .btn-luz-pasto { background-color: #fbc02d; } /* Amarelo claro */
-.high-contrast-mode .btn-luz-geral { background-color: #9e9e9e; } /* Cinza médio */
-.high-contrast-mode .btn-desligar { background-color: #f44336; } /* Vermelho intenso */
-.high-contrast-mode .btn-logout { background-color: #e71111; } /* Laranja intenso */
+        .dark-mode .dashboard-container {
+            background-color: #1e1e1e;
+            border: 1px solid #333333;
+        }
 
-.high-contrast-mode .button-toggle {
-    background-color: #000000;
-    color: #ffffff;
-}
+        .dark-mode .btn-luz-casa {
+            background-color: #66bb6a;
+        }
 
-.high-contrast-mode #toggle-settings-btn {
-    background-color: #4caf50; /* Verde visível */
-}
+        /* Verde claro */
+        .dark-mode .btn-luz-rua {
+            background-color: #64b5f6;
+        }
 
-.high-contrast-mode #toggle-horarios-btn {
-    background-color: #ff9800; /* Laranja claro */
-}
+        /* Azul claro */
+        .dark-mode .btn-luz-pasto {
+            background-color: #fbc02d;
+        }
 
-.high-contrast-mode .toggle-settings, .high-contrast-mode .localizacao-info, .high-contrast-mode .horario-container {
-    background-color: #000000;
-    border-color: #ffffff;
-}
+        /* Amarelo claro */
+        .dark-mode .btn-luz-geral {
+            background-color: #b047a5;
+        }
 
-.high-contrast-mode h2, .high-contrast-mode p, .high-contrast-mode label {
-    color: #ffffff;
-}
+        /* Cinza claro */
+        .dark-mode .btn-desligar {
+            background-color: #e57373;
+        }
 
-/* Botões de Modo Noturno e Alto Contraste */
-.mode-buttons {
-    margin-top: 30px;
-    display: flex;
-    flex-direction: column; /* Disposição vertical dos botões */
-    align-items: center;
-    gap: 10px;
-}
+        /* Vermelho claro */
+        .dark-mode .btn-logout {
+            background-color: #e71111;
+        }
 
-.btn-mode-dark, .btn-mode-contrast {
-    background-color: #007bff;
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    padding: 14px;
-    font-size: 18px;
-    font-weight: bold;
-    transition: background-color 0.3s, transform 0.2s;
-    width: 100%;
-    max-width: 300px; /* Largura máxima para os botões */
-    margin: 10px auto; /* Centraliza horizontalmente */
-}
+        /* Laranja claro */
 
-.btn-mode-dark {
-    background-color: #ff5722; /* Laranja mais visível */
-}
+        .dark-mode .button-toggle {
+            background-color: #64b5f6;
+            /* Azul claro */
+        }
 
-.btn-mode-contrast {
-    background-color: #4caf50; /* Verde mais visível */
-}
+        .dark-mode #toggle-settings-btn {
+            background-color: #557fbf;
+            /* Verde claro */
+        }
 
-.btn-mode-dark:hover {
-    background-color: #e64a19;
-}
+        .dark-mode #toggle-horarios-btn {
+            background-color: #ff9800;
+            /* Laranja claro */
+        }
 
-.btn-mode-contrast:hover {
-    background-color: #388e3c;
-}
+        .dark-mode .toggle-settings,
+        .dark-mode .localizacao-info,
+        .dark-mode .horario-container {
+            background-color: #333333;
+            border-color: #444444;
+        }
 
-/* Responsividade */
-@media (max-width: 600px) {
-    .dashboard-container {
-        margin: 10px;
-        padding: 20px;
-    }
+        .dark-mode h2,
+        .dark-mode p,
+        .dark-mode label {
+            color: #e0e0e0;
+        }
 
-    .btn, .button-toggle {
-        max-width: 100%; /* Botões ocupam toda a largura disponível */
-    }
+        /* Ajustes para modo alto contraste */
+        .high-contrast-mode {
+            background-color: #000000;
+            color: #ffffff;
+        }
 
-    .mode-buttons {
-        flex-direction: column; /* Botões de modo empilhados verticalmente em telas pequenas */
-        gap: 5px;
-    }
-}
+        .high-contrast-mode .dashboard-container {
+            background-color: #111111;
+            border: 1px solid #ffffff;
+        }
 
-/* Estilo para campos de entrada de texto e hora */
-input[type="text"], input[type="time"] {
-    width: calc(100% - 30px); /* Ajusta a largura para acomodar o padding */
-    padding: 10px;
-    font-size: 16px;
-    border: 1px solid #dcdcdc; /* Borda cinza */
-    border-radius: 8px;
-    margin-top: 10px;
-    text-align: center;
-}
+        .high-contrast-mode .btn-luz-casa {
+            background-color: #4caf50;
+        }
 
-input[type="text"]::placeholder, input[type="time"]::placeholder {
-    color: #999999; /* Cor do texto do placeholder */
-}
+        /* Verde visível */
+        .high-contrast-mode .btn-luz-rua {
+            background-color: #2196f3;
+        }
 
-/* Ajuste para campos de texto em modo escuro e alto contraste */
-.dark-mode input[type="text"], .dark-mode input[type="time"], 
-.high-contrast-mode input[type="text"], .high-contrast-mode input[type="time"] {
-    background-color: #333333;
-    color: #e0e0e0;
-    border-color: #444444;
-}
+        /* Azul visível */
+        .high-contrast-mode .btn-luz-pasto {
+            background-color: #fbc02d;
+        }
 
-.dark-mode input[type="text"]::placeholder, .dark-mode input[type="time"]::placeholder,
-.high-contrast-mode input[type="text"]::placeholder, .high-contrast-mode input[type="time"]::placeholder {
-    color: #bbbbbb; /* Placeholder mais claro */
-}
+        /* Amarelo claro */
+        .high-contrast-mode .btn-luz-geral {
+            background-color: #b047a5;
+        }
+
+        /* Cinza médio */
+        .high-contrast-mode .btn-desligar {
+            background-color: #f44336;
+        }
+
+        /* Vermelho intenso */
+        .high-contrast-mode .btn-logout {
+            background-color: #e71111;
+        }
+
+        /* Laranja intenso */
+
+        .high-contrast-mode .button-toggle {
+            background-color: #000000;
+            color: #ffffff;
+        }
+
+        .high-contrast-mode #toggle-settings-btn {
+            background-color: #557fbf;
+            /* Verde visível */
+        }
+
+        .high-contrast-mode #toggle-horarios-btn {
+            background-color: #ff9800;
+            /* Laranja claro */
+        }
+
+        .high-contrast-mode .toggle-settings,
+        .high-contrast-mode .localizacao-info,
+        .high-contrast-mode .horario-container {
+            background-color: #000000;
+            border-color: #ffffff;
+        }
+
+        .high-contrast-mode h2,
+        .high-contrast-mode p,
+        .high-contrast-mode label {
+            color: #ffffff;
+        }
+
+        /* Botões de Modo Noturno e Alto Contraste */
+        .mode-buttons {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            /* Disposição vertical dos botões */
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-mode-dark,
+        .btn-mode-contrast {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 14px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s;
+            width: 100%;
+            max-width: 300px;
+            /* Largura máxima para os botões */
+            margin: 10px auto;
+            /* Centraliza horizontalmente */
+        }
+
+        .btn-mode-dark {
+            background-color: #777;
+            /* Laranja mais visível */
+        }
+
+        .btn-mode-contrast {
+            background-color: #000;
+            /* Verde mais visível */
+        }
+
+        .btn-mode-dark:hover {
+            background-color: #777;
+        }
+
+        .btn-mode-contrast:hover {
+            background-color: #000;
+        }
+
+        /* Responsividade */
+        @media (max-width: 600px) {
+            .dashboard-container {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .btn,
+            .button-toggle {
+                max-width: 100%;
+                /* Botões ocupam toda a largura disponível */
+            }
+
+            .mode-buttons {
+                flex-direction: column;
+                /* Botões de modo empilhados verticalmente em telas pequenas */
+                gap: 5px;
+            }
+        }
+
+        /* Estilo para campos de entrada de texto e hora */
+        input[type="text"],
+        input[type="time"] {
+            width: calc(100% - 30px);
+            /* Ajusta a largura para acomodar o padding */
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #dcdcdc;
+            /* Borda cinza */
+            border-radius: 8px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        input[type="text"]::placeholder,
+        input[type="time"]::placeholder {
+            color: #999999;
+            /* Cor do texto do placeholder */
+        }
+
+        /* Ajuste para campos de texto em modo escuro e alto contraste */
+        .dark-mode input[type="text"],
+        .dark-mode input[type="time"],
+        .high-contrast-mode input[type="text"],
+        .high-contrast-mode input[type="time"] {
+            background-color: #333333;
+            color: #e0e0e0;
+            border-color: #444444;
+        }
+
+        .dark-mode input[type="text"]::placeholder,
+        .dark-mode input[type="time"]::placeholder,
+        .high-contrast-mode input[type="text"]::placeholder,
+        .high-contrast-mode input[type="time"]::placeholder {
+            color: #bbbbbb;
+            /* Placeholder mais claro */
+        }
     </style>
 </head>
+
 <body>
     <div class="dashboard-container">
         <h2 id="mainTitle">Painel de Controle</h2>
@@ -424,7 +557,7 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
         </div>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             // Função para exibir mensagens
             function displayMessage(message, type) {
                 const messageBox = document.getElementById('message');
@@ -435,14 +568,14 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
 
             // Função para atualizar aparência dos botões
             function updateButtonAppearance(button, isOn) {
-                if (button.id === 'logout') return;
+                if (button.id === 'logout' || button.id === 'luz3') return; // Ignorar o botão de "Luz Geral"
                 if (!button.dataset.originalClass) button.dataset.originalClass = button.className;
                 button.textContent = isOn ? 'Desligar' : {
                     'luz0': 'Luz do Primeiro Andar',
                     'luz1': 'Luz do Segundo Andar',
                     'luz2': 'Luz Externa',
                     'luz3': 'Luz Geral'
-                }[button.id];
+                } [button.id];
                 button.className = isOn ? 'btn btn-desligar' : button.dataset.originalClass;
             }
 
@@ -454,7 +587,7 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
                         updateButtonAppearance(document.getElementById('luz0'), states.luzCasaLigada);
                         updateButtonAppearance(document.getElementById('luz1'), states.luzRuaLigada);
                         updateButtonAppearance(document.getElementById('luz2'), states.luzPastoLigada);
-                        updateButtonAppearance(document.getElementById('luz3'), states.luzGeralLigada);
+                        // Aqui, o estado de Luz Geral pode ser atualizado, mas sem mudar sua aparência
                     });
             }
 
@@ -469,7 +602,7 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
             // Função para ligar ou desligar todas as luzes
             function toggleAllLights(action) {
                 document.querySelectorAll('.btn').forEach(button => {
-                    if (button.id.startsWith('luz') && button.id !== 'luz3') {
+                    if (button.id.startsWith('luz') && button.id !== 'luz3') { // Ignora "Luz Geral"
                         fetch(`/toggle?action=${action}&id=${button.id.replace('luz', '')}`)
                             .then(() => {
                                 updateButtonAppearance(button, action === 'ligar');
@@ -481,7 +614,7 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
             // Adicionando funcionalidade aos botões de luz
             document.querySelectorAll('.btn').forEach(button => {
                 if (button.id.startsWith('luz')) {
-                    button.addEventListener('click', function () {
+                    button.addEventListener('click', function() {
                         const buttonId = button.id.replace('luz', '');
                         const action = button.textContent === 'Desligar' ? 'desligar' : 'ligar';
 
@@ -490,11 +623,9 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
                             if (areAllLightsOn()) {
                                 // Desliga todas as luzes se todas estiverem ligadas
                                 toggleAllLights('desligar');
-                                updateButtonAppearance(button, false); // Atualiza a Luz Geral para desligada
                             } else {
                                 // Liga todas as luzes se alguma estiver desligada
                                 toggleAllLights('ligar');
-                                updateButtonAppearance(button, true); // Atualiza a Luz Geral para ligada
                             }
                         } else {
                             // Alterna apenas a luz individual
@@ -509,17 +640,17 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
             });
 
             // Alternar o modo noturno
-            document.getElementById('modeSwitch').addEventListener('click', function () {
+            document.getElementById('modeSwitch').addEventListener('click', function() {
                 document.body.classList.toggle('dark-mode');
             });
 
             // Alternar o modo de alto contraste
-            document.getElementById('contrastSwitch').addEventListener('click', function () {
+            document.getElementById('contrastSwitch').addEventListener('click', function() {
                 document.body.classList.toggle('high-contrast-mode');
             });
 
             // Alternar visibilidade da seção de localização automática
-            document.getElementById('toggle-settings-btn').addEventListener('click', function () {
+            document.getElementById('toggle-settings-btn').addEventListener('click', function() {
                 const container = document.getElementById('toggle-settings-container');
                 const isVisible = container.style.display === 'block';
                 container.style.display = isVisible ? 'none' : 'block';
@@ -527,14 +658,14 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
             });
 
             // Alternar visibilidade da seção de configurações de horários
-            document.getElementById('toggle-horarios-btn').addEventListener('click', function () {
+            document.getElementById('toggle-horarios-btn').addEventListener('click', function() {
                 const container = document.getElementById('horario-container');
                 const isVisible = container.style.display === 'block';
                 container.style.display = isVisible ? 'none' : 'block';
             });
 
             // Definir localização automática
-            document.getElementById('definir-localizacao').addEventListener('click', function () {
+            document.getElementById('definir-localizacao').addEventListener('click', function() {
                 const cidadeEstado = document.getElementById('cidade-estado').value.trim();
                 if (!cidadeEstado) {
                     displayMessage('Por favor, insira uma cidade e estado.', 'error');
@@ -558,7 +689,7 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
             });
 
             // Configurar horários
-            document.getElementById('save-horarios').addEventListener('click', function () {
+            document.getElementById('save-horarios').addEventListener('click', function() {
                 const horarioLigar = document.getElementById('horario-ligar').value.trim();
                 const horarioDesligar = document.getElementById('horario-desligar').value.trim();
 
@@ -579,7 +710,7 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
                     });
             });
 
-            document.getElementById('disable-horarios').addEventListener('click', function () {
+            document.getElementById('disable-horarios').addEventListener('click', function() {
                 fetch('/desativar-horarios')
                     .then(response => response.json())
                     .then(data => {
@@ -596,6 +727,7 @@ input[type="text"]::placeholder, input[type="time"]::placeholder {
         });
     </script>
 </body>
+
 </html>
         )rawliteral";
 
