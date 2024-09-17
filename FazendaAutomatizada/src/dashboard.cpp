@@ -122,9 +122,63 @@ void setupDashboardPage(AsyncWebServer &server)
             background-color: #fbc02d;
         }
 
-        /* Amarelo para Luz do Pasto */
         .btn-luz-geral {
-            background-color: #b047a5;
+            border: none;
+            outline: none;
+            color: #000000;
+            background: #ffffff;
+            cursor: pointer;
+            position: relative;
+            z-index: 0;
+            border-radius: 10px;
+            border: 2px solid #000000; /* Adiciona uma borda preta */
+        }
+        
+        .btn-luz-geral:before {
+            content: '';
+            background: linear-gradient(45deg, #ff0000, #ff7300, #fffb00, #48ff00, #00ffd5, #002bff, #7a00ff, #ff00c8, #ff0000);
+            position: absolute;
+            top: -2px;
+            left:-2px;
+            background-size: 400%;
+            z-index: -1;
+            filter: blur(5px);
+            width: calc(100% + 4px);
+            height: calc(100% + 4px);
+            animation: glowing 20s linear infinite;
+            opacity: 0;
+            transition: opacity .3s ease-in-out;
+            border-radius: 10px;
+        }
+        
+        .btn-luz-geral:active {
+            color: #000
+        }
+        
+        .btn-luz-geral:active:after {
+            background: transparent;
+        }
+        
+        .btn-luz-geral:hover:before {
+            opacity: 1;
+        }
+        
+        .btn-luz-geral:after {
+            z-index: -1;
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            left: 0;
+            top: 0;
+            border-radius: 10px;
+        }
+        
+        @keyframes glowing {
+            0% { background-position: 0 0; }
+            50% { background-position: 400% 0; }
+            100% { background-position: 0 0; }
         }
 
         /* rosa para Luz Geral */
@@ -274,11 +328,6 @@ void setupDashboardPage(AsyncWebServer &server)
             background-color: #fbc02d;
         }
 
-        /* Amarelo claro */
-        .dark-mode .btn-luz-geral {
-            background-color: #b047a5;
-        }
-
         /* Cinza claro */
         .dark-mode .btn-desligar {
             background-color: #e57373;
@@ -342,11 +391,6 @@ void setupDashboardPage(AsyncWebServer &server)
         /* Azul visível */
         .high-contrast-mode .btn-luz-pasto {
             background-color: #fbc02d;
-        }
-
-        /* Amarelo claro */
-        .high-contrast-mode .btn-luz-geral {
-            background-color: #b047a5;
         }
 
         /* Cinza médio */
