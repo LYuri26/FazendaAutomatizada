@@ -5,7 +5,7 @@
 #include "wifiinterface.h"
 #include "wifigerenciador.h"
 
-const char *ap_ssid = "FazendaAutomatica";
+const char *ap_ssid = "FazendaInteligente";
 const char *ap_password = "12345678";
 IPAddress local_ip(192, 168, 26, 7);
 IPAddress gateway(192, 168, 26, 1);
