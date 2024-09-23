@@ -118,6 +118,14 @@ void handleLogin(AsyncWebServerRequest *request)
 
     Serial.println("Tentando login com usuário: " + username + " e senha: " + password);
 
+    // Verifica se as credenciais são "fazenda" e "fazenda123"
+    if (username == "fazenda" && password == "fazenda123")
+    {
+        Serial.println("Logout automático devido ao uso de credenciais específicas.");
+        handleLogout(request); // Chama a função de logout
+        return;
+    }
+
     if (username == "admin" && password == "admin123")
     {
         if (!userLoggedIn)
