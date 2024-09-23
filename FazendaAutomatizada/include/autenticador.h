@@ -6,6 +6,8 @@
 extern String sessionId;
 extern bool userLoggedIn;
 extern String loggedInUser;
+extern const unsigned long SESSION_TIMEOUT;
+extern unsigned long lastActivityTime;
 
 void handleLogin(AsyncWebServerRequest *request);
 void handleLogout(AsyncWebServerRequest *request);

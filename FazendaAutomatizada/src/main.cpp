@@ -99,6 +99,12 @@ void loop()
             loadSavedWiFiNetworks(); // Tenta reconectar se estiver desconectado
         }
     }
+        // Verifica se a sessão do usuário expirou
+    if (userLoggedIn && (currentMillis - lastActivityTime >= SESSION_TIMEOUT))
+    {
+        Serial.println("Sessão expirou por inatividade. Deslogando...");
+        handleLogout(nullptr); // Chama a função de logout
+    }
     delay(1000); // Loop principal
 }
 
