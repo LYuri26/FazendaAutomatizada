@@ -10,8 +10,8 @@ extern IPAddress local_ip;
 extern IPAddress gateway;
 extern IPAddress subnet;
 
-extern char ssid[32];
-extern char password[32];
+extern String ssid;
+extern String password;
 extern bool isAPMode;
 extern bool connectionAttempted;
 

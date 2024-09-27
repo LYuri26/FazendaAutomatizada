@@ -11,8 +11,9 @@ IPAddress local_ip(192, 168, 26, 7);
 IPAddress gateway(192, 168, 26, 1);
 IPAddress subnet(255, 255, 255, 0);
 
-char ssid[32] = "";
-char password[32] = "";
+// Replace char arrays with String
+String ssid = "";
+String password = "";
 
 bool isAPMode = false;
 
@@ -49,11 +50,16 @@ void enterAPMode()
     Serial.printf("Modo AP ativado\n");
     Serial.printf("AP SSID: %s\n", ap_ssid);
     Serial.printf("AP IP: %s\n", WiFi.softAPIP().toString().c_str());
+
+    // Garantir que estamos em modo AP
+    isAPMode = true;
 }
 
 bool connectToWiFi(const String &ssid, const String &password)
 {
     WiFi.begin(ssid.c_str(), password.c_str());
+
+    // Tentativa de conexão com WPA3 ou WPA2
     for (int attempts = 0; attempts < 20; ++attempts)
     {
         if (WiFi.status() == WL_CONNECTED)
@@ -64,10 +70,20 @@ bool connectToWiFi(const String &ssid, const String &password)
             Serial.printf("IP Local: %s\n", WiFi.localIP().toString().c_str());
             Serial.printf("Gateway: %s\n", WiFi.gatewayIP().toString().c_str());
             Serial.printf("Máscara de Sub-rede: %s\n", WiFi.subnetMask().toString().c_str());
+
+            // Caso a conexão seja bem-sucedida, podemos sair do modo AP
+            isAPMode = false;
             return true;
         }
         delay(500);
     }
+
+    // Se falhar, garantir que o modo AP permaneça ativo
+    if (!isAPMode)
+    {
+        enterAPMode(); // Reativar modo AP
+    }
+
     return false;
 }
 
@@ -93,6 +109,7 @@ bool connectToSavedNetworks()
         {
             String savedSSID = line.substring(0, commaIndex);
             String savedPassword = line.substring(commaIndex + 1);
+            
             if (connectToWiFi(savedSSID, savedPassword))
             {
                 file.close();
@@ -138,5 +155,9 @@ void attemptConnection(const String &ssid, const String &password)
     {
         Serial.println("Falha na conexão. Verifique as credenciais.");
         // Feedback para o usuário sobre falha na conexão
+        if (!isAPMode)
+        {
+            enterAPMode(); // Garantir que o modo AP permanece ativo após a falha
+        }
     }
 }

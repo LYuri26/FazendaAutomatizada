@@ -702,7 +702,7 @@ body {
         <p>Deseja definir um horário automático baseado no pôr do sol e
           nascer do sol para ligar e desligar as luzes?</p>
         <input type="text" id="cidade-estado"
-          placeholder="Exemplo: Uberaba-MG">
+          placeholder="Exemplo: Uberaba-MG, para excluir digite 'Excluir'">
         <button id="definir-localizacao" class="btn">Definir
           Localização</button>
       </div>
@@ -886,8 +886,8 @@ document.getElementById('save-horarios').addEventListener('click', function () {
               
               // Atualiza a interface com os horários definidos manualmente
               document.getElementById('cidade-nome').textContent = 'Horários Definidos Manualmente';
-              document.getElementById('nascer-do-sol').textContent = `Ligar: ${horarioLigar}`;
-              document.getElementById('por-do-sol').textContent = `Desligar: ${horarioDesligar}`;
+              document.getElementById('por-do-sol').textContent = `Ligar: ${horarioLigar}`;
+              document.getElementById('nascer-do-sol').textContent = `Desligar: ${horarioDesligar}`;
               document.getElementById('localizacao-info').style.display = 'block';
           } else {
               displayMessage('Erro ao salvar horários. Tente novamente.', 'error');
