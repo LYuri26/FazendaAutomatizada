@@ -18,11 +18,11 @@ void setupDashboardPage(AsyncWebServer &server)
 <!DOCTYPE html>
 <html lang="pt-br">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Dashboard</title>
-        <style>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <style>
             /* Estilo base do corpo */
 body {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -652,87 +652,87 @@ body {
       }
     }  
         </style>
-    </head>
+  </head>
 
-    <body>
-        <div class="dashboard-container">
-            <h2 id="mainTitle">Painel de Controle</h2>
+  <body>
+    <div class="dashboard-container">
+      <h2 id="mainTitle">Painel de Controle</h2>
 
-            <!-- Contêiner de Botões de Luzes -->
-            <div class="light-buttons">
-                <button id="luz0" class="btn btn-luz-casa">Luz do Primeiro
-                    Andar</button>
-                <button id="luz1" class="btn btn-luz-rua">Luz do Segundo
-                    Andar</button>
-                <button id="luz2" class="btn btn-luz-pasto">Luz Externa</button>
-                <button id="luz3" class="btn btn-luz-geral">Luz Geral</button>
-            </div>
+      <!-- Contêiner de Botões de Luzes -->
+      <div class="light-buttons">
+        <button id="luz0" class="btn btn-luz-casa">Luz do Primeiro
+          Andar</button>
+        <button id="luz1" class="btn btn-luz-rua">Luz do Segundo
+          Andar</button>
+        <button id="luz2" class="btn btn-luz-pasto">Luz Externa</button>
+        <button id="luz3" class="btn btn-luz-geral">Luz Geral</button>
+      </div>
 
-            <!-- Contêiner do Botão de Logout -->
-            <div class="logout-container">
-                <button id="logout" class="btn btn-logout"
-                    onclick="location.href='/logout'">Logout</button>
-            </div>
+      <!-- Contêiner do Botão de Logout -->
+      <div class="logout-container">
+        <button id="logout" class="btn btn-logout"
+          onclick="location.href='/logout'">Logout</button>
+      </div>
 
-            <!-- Contêiner da Mensagem de Status -->
-            <div id="message" class="message" aria-live="assertive"></div>
+      <!-- Contêiner da Mensagem de Status -->
+      <div id="message" class="message" aria-live="assertive"></div>
 
-            <!-- Contêiner de Botões de Modo Noturno, Alto Contraste e Aumentar Fonte -->
-            <div class="mode-buttons">
-                <button id="modeSwitch" class="btn btn-mode-dark">Modo
-                    Noturno</button>
-                <button id="contrastSwitch" class="btn btn-mode-contrast">Alto
-                    Contraste</button>
-                <button id="fontSizeSwitch"
-                    class="btn btn-mode-font-size">Aumentar Fonte</button>
-                <!-- Botão para aumentar as fontes -->
-            </div>
+      <!-- Contêiner de Botões de Modo Noturno, Alto Contraste e Aumentar Fonte -->
+      <div class="mode-buttons">
+        <button id="modeSwitch" class="btn btn-mode-dark">Modo
+          Noturno</button>
+        <button id="contrastSwitch" class="btn btn-mode-contrast">Alto
+          Contraste</button>
+        <button id="fontSizeSwitch"
+          class="btn btn-mode-font-size">Aumentar Fonte</button>
+        <!-- Botão para aumentar as fontes -->
+      </div>
 
-            <!-- Contêiner dos Botões para Alternar Seções -->
-            <div class="toggle-buttons">
-                <button id="toggle-settings-btn" class="button-toggle">Definir
-                    Localização Automática</button>
-                <button id="toggle-horarios-btn"
-                    class="button-toggle">Configurações de Horários</button>
-            </div>
+      <!-- Contêiner dos Botões para Alternar Seções -->
+      <div class="toggle-buttons">
+        <button id="toggle-settings-btn" class="button-toggle">Definir
+          Localização Automática</button>
+        <button id="toggle-horarios-btn"
+          class="button-toggle">Configurações de Horários</button>
+      </div>
 
-            <!-- Seção para Definir Localização Automática -->
-            <div class="toggle-settings" id="toggle-settings-container"
-                style="display: none;">
-                <p>Deseja definir um horário automático baseado no pôr do sol e
-                    nascer do sol para ligar e desligar as luzes?</p>
-                <input type="text" id="cidade-estado"
-                    placeholder="Exemplo: Uberaba-MG">
-                <button id="definir-localizacao" class="btn">Definir
-                    Localização</button>
-            </div>
+      <!-- Seção para Definir Localização Automática -->
+      <div class="toggle-settings" id="toggle-settings-container"
+        style="display: none;">
+        <p>Deseja definir um horário automático baseado no pôr do sol e
+          nascer do sol para ligar e desligar as luzes?</p>
+        <input type="text" id="cidade-estado"
+          placeholder="Exemplo: Uberaba-MG">
+        <button id="definir-localizacao" class="btn">Definir
+          Localização</button>
+      </div>
 
-            <!-- Seção de Informações da Localização -->
-            <div class="localizacao-info" id="localizacao-info"
-                style="display: none;">
-                <h3 id="cidade-nome">Cidade</h3>
-                <p>Nascer do Sol: <span id="nascer-do-sol">Horário</span></p>
-                <p>Pôr do Sol: <span id="por-do-sol">Horário</span></p>
-            </div>
+      <!-- Seção de Informações da Localização -->
+      <div class="localizacao-info" id="localizacao-info"
+        style="display: none;">
+        <h3 id="cidade-nome">Cidade</h3>
+        <p>Nascer do Sol: <span id="nascer-do-sol">Horário</span></p>
+        <p>Pôr do Sol: <span id="por-do-sol">Horário</span></p>
+      </div>
 
-            <!-- Seção de Configurações de Horários -->
-            <div class="horario-container" id="horario-container"
-                style="display: none;">
-                <h3>Configurações de Horários</h3>
-                <div>
-                    <label for="horario-ligar">Horário para Ligar:</label>
-                    <input type="time" id="horario-ligar">
-                </div>
-                <div>
-                    <label for="horario-desligar">Horário para Desligar:</label>
-                    <input type="time" id="horario-desligar">
-                </div>
-                <button id="save-horarios" class="btn">Salvar Horários</button>
-                <button id="disable-horarios" class="btn">Desativar
-                    Horários</button>
-            </div>
+      <!-- Seção de Configurações de Horários -->
+      <div class="horario-container" id="horario-container"
+        style="display: none;">
+        <h3>Configurações de Horários</h3>
+        <div>
+          <label for="horario-ligar">Horário para Ligar:</label>
+          <input type="time" id="horario-ligar">
         </div>
-        <script>
+        <div>
+          <label for="horario-desligar">Horário para Desligar:</label>
+          <input type="time" id="horario-desligar">
+        </div>
+        <button id="save-horarios" class="btn">Salvar Horários</button>
+        <button id="disable-horarios" class="btn">Desativar
+          Horários</button>
+      </div>
+    </div>
+    <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Função para exibir mensagens
         function displayMessage(message, type) {
@@ -830,48 +830,75 @@ fontSizeSwitch.addEventListener('click', () => {
             container.style.display = container.style.display === 'block' ? 'none' : 'block';
         });
     
-        // Definir localização automática
-        document.getElementById('definir-localizacao').addEventListener('click', () => {
-            const cidadeEstado = document.getElementById('cidade-estado').value.trim();
-            if (!cidadeEstado) {
-                displayMessage('Por favor, insira uma cidade e estado.', 'error');
-                return;
-            }
-    
-            const url = `/definir-horarios?local=${encodeURIComponent(cidadeEstado)}`;
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.localizacao) {
-                        document.getElementById('cidade-nome').textContent = data.localizacao.cidade;
-                        document.getElementById('nascer-do-sol').textContent = data.localizacao.nascerDoSol;
-                        document.getElementById('por-do-sol').textContent = data.localizacao.porDoSol;
-                        document.getElementById('localizacao-info').style.display = 'block';
-                        displayMessage('Horários definidos com sucesso!', 'success');
-                    } else {
-                        displayMessage('Cidade/Estado não encontrado. Verifique e tente novamente.', 'error');
-                    }
-                });
-        });
-    
-        // Configurar horários
-        document.getElementById('save-horarios').addEventListener('click', () => {
-            const horarioLigar = document.getElementById('horario-ligar').value.trim();
-            const horarioDesligar = document.getElementById('horario-desligar').value.trim();
-    
-            if (!horarioLigar || !horarioDesligar) {
-                displayMessage('Por favor, insira ambos os horários.', 'error');
-                return;
-            }
-    
-            const url = `/salvar-horarios?ligar=${encodeURIComponent(horarioLigar)}&desligar=${encodeURIComponent(horarioDesligar)}`;
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    displayMessage(data.success ? 'Horários salvos com sucesso!' : 'Erro ao salvar horários. Tente novamente.', data.success ? 'success' : 'error');
-                });
-        });
-    
+        document.getElementById('definir-localizacao').addEventListener('click', function () {
+          const cidadeEstado = document.getElementById('cidade-estado').value.trim();
+          if (!cidadeEstado) {
+              displayMessage('Por favor, insira uma cidade e estado.', 'error');
+              return;
+          }
+      
+          const url = `/definir-horarios?local=${encodeURIComponent(cidadeEstado)}`;
+          fetch(url)
+              .then(response => {
+                  const contentType = response.headers.get("content-type");
+                  if (contentType && contentType.indexOf("application/json") !== -1) {
+                      return response.json(); // Converte a resposta para JSON
+                  } else {
+                      console.log('Resposta não é JSON:', response);
+                      throw new Error('Resposta não é JSON');
+                  }
+              })
+              .then(data => {
+                  console.log('Dados recebidos:', data);
+                  if (data.success && data.localizacao) {
+                      document.getElementById('cidade-nome').textContent = data.localizacao.cidade;
+                      document.getElementById('nascer-do-sol').textContent = data.localizacao.nascerDoSol;
+                      document.getElementById('por-do-sol').textContent = data.localizacao.porDoSol;
+                      document.getElementById('localizacao-info').style.display = 'block';
+                      displayMessage('Horários definidos com sucesso!', 'success');
+                  } else {
+                      displayMessage('Cidade/Estado não encontrado. Verifique a cidade/estado e tente novamente.', 'error');
+                  }
+              })
+              .catch(error => {
+                  console.error('Erro ao processar a solicitação:', error);
+                  displayMessage('Erro ao processar a solicitação. Verifique o console.', 'error');
+              });
+      });
+          
+// Configurar horários
+document.getElementById('save-horarios').addEventListener('click', function () {
+  const horarioLigar = document.getElementById('horario-ligar').value.trim();
+  const horarioDesligar = document.getElementById('horario-desligar').value.trim();
+
+  if (!horarioLigar || !horarioDesligar) {
+      displayMessage('Por favor, insira ambos os horários.', 'error');
+      return;
+  }
+
+  const url = `/salvar-horarios?ligar=${encodeURIComponent(horarioLigar)}&desligar=${encodeURIComponent(horarioDesligar)}`;
+  fetch(url)
+      .then(response => response.text())  // Agora estamos esperando um texto, não JSON
+      .then(data => {
+          // Verifica se a resposta contém a mensagem de sucesso
+          if (data.includes("Horários salvos com sucesso!")) {
+              displayMessage('Horários salvos com sucesso!', 'success');
+              
+              // Atualiza a interface com os horários definidos manualmente
+              document.getElementById('cidade-nome').textContent = 'Horários Definidos Manualmente';
+              document.getElementById('nascer-do-sol').textContent = `Ligar: ${horarioLigar}`;
+              document.getElementById('por-do-sol').textContent = `Desligar: ${horarioDesligar}`;
+              document.getElementById('localizacao-info').style.display = 'block';
+          } else {
+              displayMessage('Erro ao salvar horários. Tente novamente.', 'error');
+          }
+      })
+      .catch(error => {
+          console.error('Erro ao processar a solicitação:', error);
+          displayMessage('Erro ao processar a solicitação. Verifique o console.', 'error');
+      });
+});
+
         document.getElementById('disable-horarios').addEventListener('click', () => {
             fetch('/desativar-horarios')
                 .then(response => response.json())
@@ -883,7 +910,7 @@ fontSizeSwitch.addEventListener('click', () => {
         updateButtonStates();
     });    
 </script>
-    </body>
+  </body>
 
 </html>
 
